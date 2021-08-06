@@ -8,4 +8,5 @@ output/*
 *.jpg
 *.png
 *.jpeg
+*.npy
 PerceptualSimilarity/dataset/*
