@@ -1,0 +1,11 @@
+*__pycache__/
+exps/*
+script/*
+slurm/*
+output/*
+*.pth
+*.pt
+*.jpg
+*.png
+*.jpeg
+
