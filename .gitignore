@@ -8,4 +8,4 @@ output/*
 *.jpg
 *.png
 *.jpeg
-
+PerceptualSimilarity/dataset/*
