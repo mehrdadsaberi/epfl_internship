@@ -1,0 +1,9 @@
+.DS_Store
+
+# compiled python files
+*.pyc
+
+.idea/
+
+models/
+models_paper/
