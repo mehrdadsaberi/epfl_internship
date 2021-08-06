@@ -15,12 +15,12 @@ lr=0.2
 epoch=30
 
 attack=l1wass
-eps=0.0008
+eps=0.01
 alpha=0.01
 nb_iter=40
 
-resume=10
-save_model_loc=cifar_adv_training_attack-l1wass_eps-0.0008_epoch-10
+resume=20
+save_model_loc=cifar_adv_training_attack-l1wass_eps-0.01_epoch-20
 
 python train.py --dataset $dataset \
                 --batch_size $batch \

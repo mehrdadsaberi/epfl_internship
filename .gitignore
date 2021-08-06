@@ -10,3 +10,5 @@ output/*
 *.jpeg
 *.npy
 PerceptualSimilarity/dataset/*
+adv-training-corruptions/data/*
+fast-wasserstein-adversarial/data/*

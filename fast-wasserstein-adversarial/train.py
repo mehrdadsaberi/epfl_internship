@@ -77,10 +77,8 @@ def train(model, loader, device, lr, epoch, attacker, args):
         
         ckpt = {'model_state_dict': model.state_dict()}
 
-        if args.save_model_loc is None:
-            torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
-        else:
-            torch.save(ckpt, args.save_model_loc)
+        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
+        
 
 
 
@@ -146,7 +144,5 @@ if __name__ == "__main__":
 
     ckpt = {'model_state_dict': net.state_dict()}
 
-    if args.save_model_loc is None:
-        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}{}_eps-{}.pth".format(args.dataset, args.attack, args.epoch, args.eps))
-    else:
-        torch.save(ckpt, args.save_model_loc)
+    torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}{}_eps-{}.pth".format(args.dataset, args.attack, args.epoch, args.eps))
+    
