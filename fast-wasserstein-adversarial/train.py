@@ -10,6 +10,8 @@ from model import str2model
 from frank_wolfe import FrankWolfe
 from l1wass import L1Wasserstein
 
+import os
+
 import setGPU
 
 
@@ -21,7 +23,7 @@ def train(model, loader, device, lr, epoch, attacker, args):
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
 
-    for i in range(args.resume + 1, epoch):
+    for i in range(args.resume, epoch):
         correct = 0
         total = 0
         total_loss = 0
@@ -77,7 +79,7 @@ def train(model, loader, device, lr, epoch, attacker, args):
         
         ckpt = {'model_state_dict': model.state_dict()}
 
-        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
+        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}.pth".format(args.dataset, args.attack, args.eps))
         
 
 
@@ -87,24 +89,26 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--dataset', type=str)
-    parser.add_argument('--batch_size', type=int, default=128)
-    parser.add_argument('--lr', type=float, default=0.01)
-    parser.add_argument('--epoch', type=int, default=20)
+    parser.add_argument('--dataset', default="cifar", type=str)
+    parser.add_argument('--batch_size',default=128, type=int)
+    parser.add_argument('--lr', default=0.2, type=float)
+    parser.add_argument('--epoch', default=20, type=int)
 
-    parser.add_argument('--attack', type=str)
-    parser.add_argument('--eps', type=float)
-    parser.add_argument('--alpha', type=float)
-    parser.add_argument('--nb_iter', type=int, default=40, help='number of attack iterations')
+    parser.add_argument('--attack', default="l1wass", type=str)
+    parser.add_argument('--eps', default=0.005, type=float)
+    parser.add_argument('--alpha', default=0.01, type=float)
+    parser.add_argument('--nb_iter', default=40, type=int, help='number of attack iterations')
 
-    parser.add_argument('--resume', type=int, default=0)
-    parser.add_argument('--save_model_loc', type=str, default=None)
+    parser.add_argument('--resume', default=0, type=int)
+    parser.add_argument('--save_model_loc', default=None, type=str)
 
     args = parser.parse_args()
 
     print(args)
 
     device = "cuda"
+    
+    #os.environ["CUDA_VISIBLE_DEVICES"] = str(3)
 
     set_seed(0)
 
@@ -142,7 +146,7 @@ if __name__ == "__main__":
 
     train(net, trainloader, device, args.lr, args.epoch, attacker, args)
 
-    ckpt = {'model_state_dict': net.state_dict()}
+    #ckpt = {'model_state_dict': net.state_dict()}
 
-    torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}{}_eps-{}.pth".format(args.dataset, args.attack, args.epoch, args.eps))
+    #torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}{}_eps-{}.pth".format(args.dataset, args.attack, args.epoch, args.eps))
     

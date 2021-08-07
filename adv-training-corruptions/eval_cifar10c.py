@@ -64,23 +64,51 @@ def main():
     fw_model.load_state_dict(ckpt["model_state_dict"])
     fw_model.eval()
 
+    l1_1_model = ResNet18().cuda()
+    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth")
+    l1_1_model.load_state_dict(ckpt["model_state_dict"])
+    l1_1_model.eval()
+
+    l1_2_model = ResNet18().cuda()
+    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth")
+    l1_2_model.load_state_dict(ckpt["model_state_dict"])
+    l1_2_model.eval()
+
+    l1_3_model = ResNet18().cuda()
+    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth")
+    l1_3_model.load_state_dict(ckpt["model_state_dict"])
+    l1_3_model.eval()
+
+    l1_4_model = ResNet18().cuda()
+    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth")
+    l1_4_model.load_state_dict(ckpt["model_state_dict"])
+    l1_4_model.eval()
+
     l2_model = models.PreActResNet18(n_cls=10, model_width=64, cifar_norm=True).cuda()
     l2_model.load_state_dict(torch.load("models/l2-at-eps=0.1-cifar10.pt")['last'])
     l2_model.eval()
 
+    l1_1_acc_cln = clean_accuracy(l1_1_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
+    l1_2_acc_cln = clean_accuracy(l1_2_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
+    l1_3_acc_cln = clean_accuracy(l1_3_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
+    l1_4_acc_cln = clean_accuracy(l1_4_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
     fw_acc_cln = clean_accuracy(fw_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
     l2_acc_cln = clean_accuracy(l2_model, x_clean.cuda(), y_clean.cuda())
     std_acc_cln = clean_accuracy(std_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    print("Clean | \t FrankWolfe: {:.4f} \t L2: {:.4f} \t Standard: {:.4f}".format(fw_acc_cln, l2_acc_cln, std_acc_cln))
+    print("Clean | \t Wass 0.01: {:.4f} \t Wass 0.005: {:.4f} \t Wass 0.002: {:.4f} \t Wass 0.0008: {:.4f} \t FrankWolfe: {:.4f} \t L2: {:.4f} \t Standard: {:.4f}".format(l1_1_acc_cln, l1_2_acc_cln, l1_3_acc_cln, l1_4_acc_cln, fw_acc_cln, l2_acc_cln, std_acc_cln))
 
     for corr in corruptions:
         for i in range(1,6):
             x_corr, y_corr = load_cifar10c(n_examples=args.n_samples, severity=i, corruptions=(corr,), data_dir=args.data_dir)
 
+            l1_1_acc = clean_accuracy(l1_1_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
+            l1_2_acc = clean_accuracy(l1_2_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
+            l1_3_acc = clean_accuracy(l1_3_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
+            l1_4_acc = clean_accuracy(l1_4_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
             fw_acc = clean_accuracy(fw_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
             l2_acc = clean_accuracy(l2_model, x_corr.cuda(), y_corr.cuda())
             std_acc = clean_accuracy(std_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            print("{} {} | \t FrankWolfe: {:.4f} \t L2: {:.4f} \t Standard: {:.4f}".format(corr.ljust(20), i, fw_acc, l2_acc, std_acc))
+            print("{} {} | \t Wass 0.01: {:.4f} ({:.4f}) \t Wass 0.005: {:.4f} ({:.4f}) \t Wass 0.002: {:.4f} ({:.4f}) \t Wass 0.0008: {:.4f} ({:.4f}) \t FrankWolfe: {:.4f} ({:.4f}) \t L2: {:.4f} ({:.4f}) \t Standard: {:.4f} ({:.4f})".format(corr.ljust(20), i, l1_1_acc, l1_1_acc_cln - l1_1_acc, l1_2_acc, l1_2_acc_cln - l1_2_acc, l1_3_acc, l1_3_acc_cln - l1_3_acc, l1_4_acc, l1_4_acc_cln - l1_4_acc, fw_acc, fw_acc_cln - fw_acc, l2_acc, l2_acc_cln - l2_acc, std_acc, std_acc_cln - std_acc))
 
 
 
