@@ -14,6 +14,10 @@ from torch.utils.data import Dataset, DataLoader
 from resnet import ResNet18
 from wass_sinkhorn import Wasserstein_Sinkhorn
 
+import matplotlib.pyplot as plt
+
+import ot.gromov
+
 
 def corr_eval(x_corrs, y_corrs, model):
     model.eval()
@@ -57,6 +61,8 @@ corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
                "zoom_blur", "frost", "glass_blur", "impulse_noise", "contrast",
                "jpeg_compression", "elastic_transform"]
 
+#corruptions = ["elastic_transform"]
+
 def main():
     args = get_args()
     device = "cuda"
@@ -80,6 +86,9 @@ def main():
 
     wass_func = Wasserstein_Sinkhorn(lam=0.1).forward
 
+    
+    plt.rcParams["figure.figsize"] = (30,10)
+
     for corr in corruptions:
         for i in range(1,6):
             x_corr, y_corr = load_cifar10c(n_examples=args.n_samples, severity=i, corruptions=(corr,), data_dir=args.data_dir)
@@ -88,31 +97,51 @@ def main():
             dataset = CustomDataset(x_corr, x_clean, y_clean)
             dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
             
-            mean_dist = 0
+            for ind in range(len(x_corr)):
+                img_clean = x_clean[ind].swapaxes(0, 1).swapaxes(1, 2)
+                img_corr = x_corr[ind].swapaxes(0, 1).swapaxes(1, 2)
+                img_corr_scaled = img_corr / img_corr.sum(dim=(0, 1)) * img_clean.sum(dim=(0, 1))
 
-            for data in dataloader:
-                cln_x = data["Clean Image"].cuda()
-                corr_x = data["Corrupted Image"].cuda()
+                fig, (ax1, ax2, ax3) = plt.subplots(1,3)
 
-                dist = wass_func(cln_x, corr_x)
-                #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
-                #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
-                #print(dist)
-                #exit()
-                mean_dist += dist.sum()
-
-            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
-
+                ax1.imshow(img_clean)
+                ax1.axis('off')
+                ax1.set_title("Clean Image")
                 
+                ax2.imshow(img_corr)
+                ax2.axis('off')
+                ax2.set_title("Corrupted Image, Wass Dist: {:.6f}".format(float(wass_func(x_clean[ind:ind+1], x_corr[ind:ind+1]))))
                 
+                ax3.imshow(img_corr_scaled)
+                ax3.axis('off')
+                ax3.set_title("Scaled Corrupted Image")
+
+                plt.savefig("imgs/{:03d}-{}-{}.png".format(ind, corr, i))
+                #plt.show()
+                plt.close()
 
 
-    prnt = []
-    for acc in mean_acc:
-        prnt += ["{:.4f}".format(acc / cnt)]
-    print()
-    print_info("Average", prnt)
-    
+
+            # mean_dist = 0
+
+            # for data in dataloader:
+            #     for c in range(3):
+            #         cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+            #         cln_x /= np.sum(cln_x)
+            #         corr_x = data["Corrupted Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+            #         corr_x /= np.sum(corr_x)
+
+            #         M = torch.load("cmats/l1.pt").numpy()
+
+            #         dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
+            #         #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
+            #         #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
+            #         #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
+            #         print(dist)
+            #         #exit()
+            #         mean_dist += dist.sum()
+
+            # print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
 
 
     # if args.only_clean:
