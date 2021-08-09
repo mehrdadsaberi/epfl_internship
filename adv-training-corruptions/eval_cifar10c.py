@@ -50,67 +50,87 @@ def main():
     mu = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
     std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
 
-    std_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_vanilla.pth")
-    if "net" in ckpt.keys():
-        for key in ckpt["net"].keys():
-            assert "module" in key
-        ckpt["net"] = dict((key[7:], value) for key, value in ckpt["net"].items())
-        std_model.load_state_dict(ckpt["net"])
-    std_model.eval()
+    models_info = [["FrankWolfe", "models/cifar_adv_training_attack-frank_eps-0.005.pth", "dict", None],
+                ["Wass 0.01", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth", "dict", None],
+                ["Wass 0.005", "models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth", "dict", None],
+                ["Wass 0.002", "models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth", "dict", None],
+                ["Wass 0.0008", "models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth", "dict", None],
+                ["Wass 0.01 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-20.pth", "dict", None],
+                ["Wass 0.001 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.001_epoch-20.pth", "dict", None],
+                ["Wass 0.0005 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.0005_epoch-20.pth", "dict", None],
+                ["L2", "models/l2-at-eps=0.1-cifar10.pt", "pre", None],
+                ["Standard", "models/cifar_vanilla.pth", "net", None]]
 
-    fw_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_adv_training_attack-frank_eps-0.005.pth")
-    fw_model.load_state_dict(ckpt["model_state_dict"])
-    fw_model.eval()
+    def print_info(name, elems):
+        print("{} \t".format(name.ljust(20)), end="")
+        for i in elems:
+            print("{} \t".format(i.ljust(15)), end="")
+        print()
+    
+        
+    prnt = []
+    for model in models_info:
+        if model[2] == "dict":            
+            model[-1] = ResNet18().cuda()
+            ckpt = torch.load(model[1])
+            model[-1].load_state_dict(ckpt["model_state_dict"])
+            model[-1].eval()
+        elif model[2] == "net":
+            model[-1] = ResNet18().cuda()
+            ckpt = torch.load(model[1])
+            if "net" in ckpt.keys():
+                for key in ckpt["net"].keys():
+                    assert "module" in key
+                ckpt["net"] = dict((key[7:], value) for key, value in ckpt["net"].items())
+                model[-1].load_state_dict(ckpt["net"])
+            model[-1].eval()
+        elif model[2] == "pre":        
+            model[-1] = models.PreActResNet18(n_cls=10, model_width=64, cifar_norm=True).cuda()
+            model[-1].load_state_dict(torch.load(model[1])['last'])
+            model[-1].eval()
+        prnt += [model[0]]
+    print_info("Corruption", prnt)
 
-    l1_1_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth")
-    l1_1_model.load_state_dict(ckpt["model_state_dict"])
-    l1_1_model.eval()
+    prnt = []
+    acc_cln = [0 for i in models_info]
+    for i, model in enumerate(models_info):
+        net = model[-1]
+        if model[2] == "pre":
+            acc_cln[i] = clean_accuracy(net, x_clean.cuda(), y_clean.cuda())
+        elif model[2] == "dict" or model[2] == "net":
+            acc_cln[i] = clean_accuracy(net, ((x_clean.cuda() - mu) / std), y_clean.cuda())
+        prnt += ["{:.4f}".format(acc_cln[i])]
+    print()
+    print_info("Clean", prnt)
+    
 
-    l1_2_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth")
-    l1_2_model.load_state_dict(ckpt["model_state_dict"])
-    l1_2_model.eval()
 
-    l1_3_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth")
-    l1_3_model.load_state_dict(ckpt["model_state_dict"])
-    l1_3_model.eval()
-
-    l1_4_model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth")
-    l1_4_model.load_state_dict(ckpt["model_state_dict"])
-    l1_4_model.eval()
-
-    l2_model = models.PreActResNet18(n_cls=10, model_width=64, cifar_norm=True).cuda()
-    l2_model.load_state_dict(torch.load("models/l2-at-eps=0.1-cifar10.pt")['last'])
-    l2_model.eval()
-
-    l1_1_acc_cln = clean_accuracy(l1_1_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    l1_2_acc_cln = clean_accuracy(l1_2_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    l1_3_acc_cln = clean_accuracy(l1_3_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    l1_4_acc_cln = clean_accuracy(l1_4_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    fw_acc_cln = clean_accuracy(fw_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    l2_acc_cln = clean_accuracy(l2_model, x_clean.cuda(), y_clean.cuda())
-    std_acc_cln = clean_accuracy(std_model, ((x_clean.cuda() - mu) / std), y_clean.cuda())
-    print("Clean | \t Wass 0.01: {:.4f} \t Wass 0.005: {:.4f} \t Wass 0.002: {:.4f} \t Wass 0.0008: {:.4f} \t FrankWolfe: {:.4f} \t L2: {:.4f} \t Standard: {:.4f}".format(l1_1_acc_cln, l1_2_acc_cln, l1_3_acc_cln, l1_4_acc_cln, fw_acc_cln, l2_acc_cln, std_acc_cln))
-
+    mean_acc = [0 for i in models_info]
+    cnt = 0
     for corr in corruptions:
+        print()
         for i in range(1,6):
             x_corr, y_corr = load_cifar10c(n_examples=args.n_samples, severity=i, corruptions=(corr,), data_dir=args.data_dir)
+            cnt += 1
 
-            l1_1_acc = clean_accuracy(l1_1_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            l1_2_acc = clean_accuracy(l1_2_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            l1_3_acc = clean_accuracy(l1_3_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            l1_4_acc = clean_accuracy(l1_4_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            fw_acc = clean_accuracy(fw_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            l2_acc = clean_accuracy(l2_model, x_corr.cuda(), y_corr.cuda())
-            std_acc = clean_accuracy(std_model, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-            print("{} {} | \t Wass 0.01: {:.4f} ({:.4f}) \t Wass 0.005: {:.4f} ({:.4f}) \t Wass 0.002: {:.4f} ({:.4f}) \t Wass 0.0008: {:.4f} ({:.4f}) \t FrankWolfe: {:.4f} ({:.4f}) \t L2: {:.4f} ({:.4f}) \t Standard: {:.4f} ({:.4f})".format(corr.ljust(20), i, l1_1_acc, l1_1_acc_cln - l1_1_acc, l1_2_acc, l1_2_acc_cln - l1_2_acc, l1_3_acc, l1_3_acc_cln - l1_3_acc, l1_4_acc, l1_4_acc_cln - l1_4_acc, fw_acc, fw_acc_cln - fw_acc, l2_acc, l2_acc_cln - l2_acc, std_acc, std_acc_cln - std_acc))
+            prnt = []
+            acc_corr = [0 for i in models_info]
+            for j, model in enumerate(models_info):
+                net = model[-1]
+                if model[2] == "pre":
+                    acc_corr[j] = clean_accuracy(net, x_corr.cuda(), y_corr.cuda())
+                elif model[2] == "dict" or model[2] == "net":
+                    acc_corr[j] = clean_accuracy(net, ((x_corr.cuda() - mu) / std), y_corr.cuda())
+                mean_acc[j] += acc_corr[j]
+                prnt += ["{:.4f}".format(acc_corr[j])]
+            print_info("{} {}".format(corr, i), prnt)
 
-
+    prnt = []
+    for acc in mean_acc:
+        prnt += ["{:.4f}".format(acc / cnt)]
+    print()
+    print_info("Average", prnt)
+    
 
 
     # if args.only_clean:

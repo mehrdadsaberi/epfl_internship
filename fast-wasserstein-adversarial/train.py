@@ -18,7 +18,12 @@ import setGPU
 def train(model, loader, device, lr, epoch, attacker, args):
     model.train()
 
-    lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    #lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    def lr_schedule(t):
+        if t < epoch - 3:
+            return lr
+        else:
+            return lr / 10.
     loss_fn = nn.CrossEntropyLoss(reduction="mean")
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
@@ -68,7 +73,7 @@ def train(model, loader, device, lr, epoch, attacker, args):
             total_loss += loss.item()
             total_cln_loss += cln_loss.item()
 
-            if (batch_idx + 1) % 10 == 0:
+            if (batch_idx + 1) % 50 == 0:
                 print("\t batch: {:4d}/{:4d} \t loss: {:.4f} acc: {:3.3f}% \t clean loss: {:.4f} clean acc: {:3.3f}% \t lr: {:.5f}"
                     .format(batch_idx, len(loader), loss.item(), 100. * cur_correct / scores.size(0), cln_loss.item(), 100. * cur_cln_correct / scores.size(0), cur_lr))
             
@@ -77,9 +82,12 @@ def train(model, loader, device, lr, epoch, attacker, args):
         print("epoch: {:4d}/{:4d} \t loss: {:.4f} acc: {:3.3f}% \t clean loss: {:.4f} clean acc: {:3.3f}% \t time: {:7.3f}s  lr: {:.5f}"
               .format(i + 1, epoch, total_loss / len(loader), 100. * correct / total, total_cln_loss / len(loader), 100. * cln_correct / total, start.elapsed_time(end) / 1000, cur_lr))
         
-        ckpt = {'model_state_dict': model.state_dict()}
 
-        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}.pth".format(args.dataset, args.attack, args.eps))
+        ckpt = {'model_state_dict': model.state_dict()}
+        lst_keep = 4
+        if i > lst_keep and (i - lst_keep) % 10 != 0:
+            os.remove("./checkpoints/{}_adv_training_attack-{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i - lst_keep))
+        torch.save(ckpt, "./checkpoints/{}_adv_training_attack-{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
         
 
 
@@ -91,8 +99,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--dataset', default="cifar", type=str)
     parser.add_argument('--batch_size',default=128, type=int)
-    parser.add_argument('--lr', default=0.2, type=float)
-    parser.add_argument('--epoch', default=20, type=int)
+    parser.add_argument('--lr', default=0.1, type=float)
+    parser.add_argument('--epoch', default=53, type=int)
 
     parser.add_argument('--attack', default="l1wass", type=str)
     parser.add_argument('--eps', default=0.005, type=float)
