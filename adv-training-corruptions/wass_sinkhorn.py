@@ -6,6 +6,8 @@ import numpy as np
 import torch.nn
 import ot
 import time
+import matplotlib.pyplot as plt
+import os
 
 
 
@@ -23,6 +25,7 @@ class Wasserstein_Sinkhorn(FakeNet):
         self.is_M = False
         self.M = None
         self.lam = lam
+        self.cnt_plot = 0
 
     def sinkhorn_knopp(self, a, b, M, reg, numItermax=1000,
                    stopThr=1e-9, verbose=False, log=False, ret_pi=True, **kwargs):
@@ -70,6 +73,35 @@ class Wasserstein_Sinkhorn(FakeNet):
         else:  # return OT matrix
             return torch.einsum('bi,ij,bj->bij', u, K, v)
 
+
+    def pi_analyze(self, pi, dist):
+        try:
+            os.mkdir("pi_analyze/")
+        except:
+            pass
+        pi = pi.mean(dim=0)
+        X = int(pi.shape[0] ** (1/2))
+        tmp_cnt = [0 for i in range(2 * X)]
+        thresh_val = 0
+
+        for k1 in range(pi.shape[0]):
+            for k2 in range(pi.shape[1]):
+                if k1 == k2:
+                    continue
+                i1 = k1 // X
+                j1 = k1 % X
+                i2 = k2 // X
+                j2 = k2 % X 
+                tmp_cnt[abs(i1 - i2) + abs(j1 - j2)] += pi[k1, k2]
+                if abs(i1 - i2) + abs(j1 - j2) > 10:
+                    thresh_val += pi[k1, k2]
+                        
+        plt.bar(range(len(tmp_cnt)), tmp_cnt)
+        plt.title("Wass dist: {:.6f}, More than 10: {}".format(dist.mean().item(), thresh_val))
+        plt.savefig("pi_analyze/{:03d}.png".format(self.cnt_plot))
+        self.cnt_plot += 1
+        plt.close()
+        
 
     def forward(self, in0, in1, retPerLayer=None):
         (N,C,X,Y) = in0.size()
@@ -119,6 +151,7 @@ class Wasserstein_Sinkhorn(FakeNet):
             PI = self.sinkhorn_knopp(in0, in1, self.M, self.lam)
 
             dist = (PI * self.M).sum(dim=(1,2))
+            self.pi_analyze(PI, dist)
             #log_pi = torch.log(PI)
             #log_pi[log_pi == -float("inf")] = 0
             #dist += lam * (PI * log_pi).sum(dim=(1,2))

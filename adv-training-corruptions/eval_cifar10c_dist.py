@@ -97,32 +97,40 @@ def main():
             dataset = CustomDataset(x_corr, x_clean, y_clean)
             dataloader = DataLoader(dataset, batch_size=args.batch_size, shuffle=True, num_workers=2)
             
-            for ind in range(len(x_corr)):
-                img_clean = x_clean[ind].swapaxes(0, 1).swapaxes(1, 2)
-                img_corr = x_corr[ind].swapaxes(0, 1).swapaxes(1, 2)
-                img_corr_scaled = img_corr / img_corr.sum(dim=(0, 1)) * img_clean.sum(dim=(0, 1))
+            # for ind in range(len(x_corr)):
+            #     img_clean = x_clean[ind].swapaxes(0, 1).swapaxes(1, 2)
+            #     img_corr = x_corr[ind].swapaxes(0, 1).swapaxes(1, 2)
+            #     img_corr_scaled = img_corr / img_corr.sum(dim=(0, 1)) * img_clean.sum(dim=(0, 1))
 
-                fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+            #     fig, (ax1, ax2, ax3) = plt.subplots(1,3)
 
-                ax1.imshow(img_clean)
-                ax1.axis('off')
-                ax1.set_title("Clean Image")
+            #     ax1.imshow(img_clean)
+            #     ax1.axis('off')
+            #     ax1.set_title("Clean Image")
                 
-                ax2.imshow(img_corr)
-                ax2.axis('off')
-                ax2.set_title("Corrupted Image, Wass Dist: {:.6f}".format(float(wass_func(x_clean[ind:ind+1], x_corr[ind:ind+1]))))
+            #     ax2.imshow(img_corr)
+            #     ax2.axis('off')
+            #     ax2.set_title("Corrupted Image, Wass Dist: {:.6f}".format(float(wass_func(x_clean[ind:ind+1], x_corr[ind:ind+1]))))
                 
-                ax3.imshow(img_corr_scaled)
-                ax3.axis('off')
-                ax3.set_title("Scaled Corrupted Image")
+            #     ax3.imshow(img_corr_scaled)
+            #     ax3.axis('off')
+            #     ax3.set_title("Scaled Corrupted Image")
 
-                plt.savefig("imgs/{:03d}-{}-{}.png".format(ind, corr, i))
-                #plt.show()
-                plt.close()
+            #     plt.savefig("imgs/{:03d}-{}-{}.png".format(ind, corr, i))
+            #     #plt.show()
+            #     plt.close()
 
 
 
-            # mean_dist = 0
+            mean_dist = 0
+
+            for data in dataloader:
+                cln_x = data["Clean Image"]
+                corr_x = data["Corrupted Image"]
+
+                dist = wass_func(cln_x, corr_x)
+                
+                mean_dist += dist.sum()
 
             # for data in dataloader:
             #     for c in range(3):
@@ -137,11 +145,11 @@ def main():
             #         #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
             #         #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
             #         #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
-            #         print(dist)
+            #         #print(dist)
             #         #exit()
             #         mean_dist += dist.sum()
 
-            # print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
+            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
 
 
     # if args.only_clean:

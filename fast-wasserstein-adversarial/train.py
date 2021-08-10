@@ -86,7 +86,10 @@ def train(model, loader, device, lr, epoch, attacker, args):
         ckpt = {'model_state_dict': model.state_dict()}
         lst_keep = 4
         if i > lst_keep and (i - lst_keep) % 10 != 0:
-            os.remove("./checkpoints/{}_{}_eps-{}_alpha-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i - lst_keep))
+            try:
+                os.remove("./checkpoints/{}_{}_eps-{}_alpha-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i - lst_keep))
+            except:
+                pass
         torch.save(ckpt, "./checkpoints/{}_{}_eps-{}_alpha-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i + 1))
         
 
