@@ -18,12 +18,12 @@ import setGPU
 def train(model, loader, device, lr, epoch, attacker, args):
     model.train()
 
-    #lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
-    def lr_schedule(t):
-        if t < epoch - 3:
-            return lr
-        else:
-            return lr / 10.
+    lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    # def lr_schedule(t):
+    #     if t < epoch - 3:
+    #         return lr
+    #     else:
+    #         return lr / 10.
     loss_fn = nn.CrossEntropyLoss(reduction="mean")
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
@@ -84,8 +84,8 @@ def train(model, loader, device, lr, epoch, attacker, args):
         
 
         ckpt = {'model_state_dict': model.state_dict()}
-        lst_keep = 4
-        if i > lst_keep and (i - lst_keep) % 10 != 0:
+        lst_keep = 0
+        if i > lst_keep:
             try:
                 os.remove("./checkpoints/{}_{}_eps-{}_alpha-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i - lst_keep))
             except:

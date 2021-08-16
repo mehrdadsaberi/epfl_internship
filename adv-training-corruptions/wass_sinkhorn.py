@@ -151,7 +151,7 @@ class Wasserstein_Sinkhorn(FakeNet):
             PI = self.sinkhorn_knopp(in0, in1, self.M, self.lam)
 
             dist = (PI * self.M).sum(dim=(1,2))
-            self.pi_analyze(PI, dist)
+            #self.pi_analyze(PI, dist)
             #log_pi = torch.log(PI)
             #log_pi[log_pi == -float("inf")] = 0
             #dist += lam * (PI * log_pi).sum(dim=(1,2))

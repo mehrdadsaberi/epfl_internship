@@ -5,7 +5,7 @@ import torch
 import models
 import pandas as pd
 import data
-import setGPU
+#import setGPU
 
 from robustbench.data import load_cifar10, load_cifar10c
 from robustbench.utils import clean_accuracy
@@ -43,7 +43,7 @@ corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
 def main():
     args = get_args()
     device = "cuda"
-    #os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+    os.environ["CUDA_VISIBLE_DEVICES"] = str("6")
     x_clean, y_clean = load_cifar10(n_examples=args.n_samples, data_dir=args.data_dir)
 
     
@@ -51,13 +51,19 @@ def main():
     std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
 
     models_info = [["FrankWolfe", "models/cifar_adv_training_attack-frank_eps-0.005.pth", "dict", None],
-                ["Wass 0.01", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth", "dict", None],
-                ["Wass 0.005", "models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth", "dict", None],
-                ["Wass 0.002", "models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth", "dict", None],
-                ["Wass 0.0008", "models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth", "dict", None],
-                ["Wass 0.01 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-20.pth", "dict", None],
-                ["Wass 0.001 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.001_epoch-20.pth", "dict", None],
-                ["Wass 0.0005 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.0005_epoch-20.pth", "dict", None],
+#                ["Wass 0.01", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth", "dict", None],
+#                ["Wass 0.005", "models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth", "dict", None],
+#                ["Wass 0.002", "models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth", "dict", None],
+                # ["Wass 0.0008", "models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth", "dict", None],
+                # ["Wass 0.0008 (53ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-53.pth", "dict", None],
+                # ["Wass 0.0008 (52ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-52.pth", "dict", None],
+                # ["Wass 0.0008 (51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-51.pth", "dict", None],
+                # ["Wass 0.0008 (a,53ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-53.pth", "dict", None],
+                # ["Wass 0.0008 (a,52ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-52.pth", "dict", None],
+#                ["Wass 0.0008 (a,51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-51.pth", "dict", None],
+#                ["Wass 0.01 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-20.pth", "dict", None],
+#                ["Wass 0.001 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.001_epoch-20.pth", "dict", None],
+#                ["Wass 0.0005 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.0005_epoch-20.pth", "dict", None],
                 ["L2", "models/l2-at-eps=0.1-cifar10.pt", "pre", None],
                 ["Standard", "models/cifar_vanilla.pth", "net", None]]
 

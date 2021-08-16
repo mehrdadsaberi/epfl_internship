@@ -66,7 +66,7 @@ corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
 def main():
     args = get_args()
     device = "cuda"
-    #os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+    #os.environ["CUDA_VISIBLE_DEVICES"] = str("6")
     x_clean, y_clean = load_cifar10(n_examples=args.n_samples, data_dir=args.data_dir)
 
     mu = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
@@ -123,14 +123,25 @@ def main():
 
 
             mean_dist = 0
+            mean_l1 = 0
+            mean_diff = 0
 
             for data in dataloader:
-                cln_x = data["Clean Image"]
-                corr_x = data["Corrupted Image"]
+                cln_x = data["Clean Image"].cuda()
+                corr_x = data["Corrupted Image"].cuda()
 
                 dist = wass_func(cln_x, corr_x)
+
+                (N,C,X,Y) = cln_x.size()
+                x1 = (cln_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+                x1 /= x1.sum(dim=1, keepdim=True) + 1e-35
+                x2 = (corr_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+                x2 /= x2.sum(dim=1, keepdim=True) + 1e-35
+                dist_l1 = (x1 - x2).abs().sum(dim=1).view(N, C).sum(dim=1)
                 
                 mean_dist += dist.sum()
+                mean_l1 += dist_l1.sum()
+                mean_diff += (dist - dist_l1).abs().sum()
 
             # for data in dataloader:
             #     for c in range(3):
@@ -149,7 +160,7 @@ def main():
             #         #exit()
             #         mean_dist += dist.sum()
 
-            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
+            print("{} {} | \t Mean Wasserstein: {:.4f} \t Mean L1: {:.4f} \t Mean Diff: {:.4f}\t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, mean_l1 / args.n_samples, mean_diff / args.n_samples, acc_corr))
 
 
     # if args.only_clean:
