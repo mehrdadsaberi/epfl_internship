@@ -12,20 +12,20 @@ from l1wass import L1Wasserstein
 
 import os
 
-#import setGPU
+import setGPU
 
 
 def train(model, loader, device, lr, epoch, attacker, args):
     model.train()
 
-    #lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
-    def lr_schedule(t):
-        if t < 50:
-            return lr
-        elif t < 100:
-            return lr / 10.
-        else:
-            return lr / 100.
+    lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    # def lr_schedule(t):
+    #     if t < 50:
+    #         return lr
+    #     elif t < 100:
+    #         return lr / 10.
+    #     else:
+    #         return lr / 100.
     loss_fn = nn.CrossEntropyLoss(reduction="mean")
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
@@ -87,12 +87,12 @@ def train(model, loader, device, lr, epoch, attacker, args):
 
         ckpt = {'model_state_dict': model.state_dict()}
         lst_keep = 0
-        if i > lst_keep and (i - lst_keep) % 10 != 0:
+        if i > lst_keep:
             try:
-                os.remove("./checkpoints/{}_{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i - lst_keep))
+                os.remove("./checkpoints/{}_{}_eps-{}_epoch-{}-c.pth".format(args.dataset, args.attack, args.eps, i - lst_keep))
             except:
                 pass
-        torch.save(ckpt, "./checkpoints/{}_{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
+        torch.save(ckpt, "./checkpoints/{}_{}_eps-{}_epoch-{}-c.pth".format(args.dataset, args.attack, args.eps, i + 1))
         
 
 
