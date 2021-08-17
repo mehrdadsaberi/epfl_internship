@@ -118,7 +118,8 @@ class Wasserstein_Sinkhorn(FakeNet):
                 #         i2 = p2 // Y
                 #         j2 = p2 - i2 * Y
                 #         self.M[p1,p2] = abs(i1 - i2)  + abs(j1 - j2)
-                # torch.save(self.M,"cmats/l1.pt")
+                #         # self.M[p1,p2] = ((abs(i1 - i2) ** 2)  + (abs(j1 - j2) ** 2)) ** (1 / 2)
+                # torch.save(self.M,"cmats/l2.pt")
                 # print("cost matrix calculation done! time:",time.time() - tmp_time)
                 # exit()
                 self.M = torch.load("cmats/l1.pt", map_location=in0.device)

@@ -56,10 +56,7 @@ class CustomDataset(Dataset):
         return sample
     
 
-corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
-               "gaussian_noise", "defocus_blur", "brightness", "fog",
-               "zoom_blur", "frost", "glass_blur", "impulse_noise", "contrast",
-               "jpeg_compression", "elastic_transform"]
+corruptions = ["jpeg_compression", "elastic_transform"]
 
 #corruptions = ["elastic_transform"]
 
@@ -123,44 +120,47 @@ def main():
 
 
             mean_dist = 0
-            mean_l1 = 0
-            mean_diff = 0
-
-            for data in dataloader:
-                cln_x = data["Clean Image"].cuda()
-                corr_x = data["Corrupted Image"].cuda()
-
-                dist = wass_func(cln_x, corr_x)
-
-                (N,C,X,Y) = cln_x.size()
-                x1 = (cln_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
-                x1 /= x1.sum(dim=1, keepdim=True) + 1e-35
-                x2 = (corr_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
-                x2 /= x2.sum(dim=1, keepdim=True) + 1e-35
-                dist_l1 = (x1 - x2).abs().sum(dim=1).view(N, C).sum(dim=1)
-                
-                mean_dist += dist.sum()
-                mean_l1 += dist_l1.sum()
-                mean_diff += (dist - dist_l1).abs().sum()
+            # mean_l1 = 0
+            # mean_diff = 0
 
             # for data in dataloader:
-            #     for c in range(3):
-            #         cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
-            #         cln_x /= np.sum(cln_x)
-            #         corr_x = data["Corrupted Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
-            #         corr_x /= np.sum(corr_x)
+            #     cln_x = data["Clean Image"].cuda()
+            #     corr_x = data["Corrupted Image"].cuda()
 
-            #         M = torch.load("cmats/l1.pt").numpy()
+            #     dist = wass_func(cln_x, corr_x)
 
-            #         dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
-            #         #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
-            #         #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
-            #         #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
-            #         #print(dist)
-            #         #exit()
-            #         mean_dist += dist.sum()
+            #     (N,C,X,Y) = cln_x.size()
+            #     x1 = (cln_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+            #     x1 /= x1.sum(dim=1, keepdim=True) + 1e-35
+            #     x2 = (corr_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+            #     x2 /= x2.sum(dim=1, keepdim=True) + 1e-35
+            #     dist_l1 = (x1 - x2).abs().sum(dim=1).view(N, C).sum(dim=1)
+                
+                
+            #     mean_dist += dist.sum()
+            #     mean_l1 += dist_l1.sum()
+            #     mean_diff += (dist - dist_l1).abs().sum()
 
-            print("{} {} | \t Mean Wasserstein: {:.4f} \t Mean L1: {:.4f} \t Mean Diff: {:.4f}\t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, mean_l1 / args.n_samples, mean_diff / args.n_samples, acc_corr))
+            for data in dataloader:
+                for c in range(3):
+                    cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+                    cln_x /= np.sum(cln_x)
+                    corr_x = data["Corrupted Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+                    corr_x /= np.sum(corr_x)
+
+                    M = torch.load("cmats/l2.pt").numpy()
+
+                    #dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
+                    dist = ot.emd2(cln_x, corr_x, M)
+                    
+                    #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
+                    #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
+                    #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
+                    #print(dist)
+                    #exit()
+                    mean_dist += dist
+
+            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
 
 
     # if args.only_clean:

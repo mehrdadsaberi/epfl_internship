@@ -5,7 +5,7 @@ import torch
 import models
 import pandas as pd
 import data
-#import setGPU
+import setGPU
 
 from robustbench.data import load_cifar10, load_cifar10c
 from robustbench.utils import clean_accuracy
@@ -43,7 +43,7 @@ corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
 def main():
     args = get_args()
     device = "cuda"
-    os.environ["CUDA_VISIBLE_DEVICES"] = str("6")
+    #os.environ["CUDA_VISIBLE_DEVICES"] = str("6")
     x_clean, y_clean = load_cifar10(n_examples=args.n_samples, data_dir=args.data_dir)
 
     
@@ -54,12 +54,11 @@ def main():
 #                ["Wass 0.01", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth", "dict", None],
 #                ["Wass 0.005", "models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth", "dict", None],
 #                ["Wass 0.002", "models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth", "dict", None],
-                # ["Wass 0.0008", "models/cifar_adv_training_attack-l1wass_eps-0.0008_epoch-30.pth", "dict", None],
-                # ["Wass 0.0008 (53ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-53.pth", "dict", None],
-                # ["Wass 0.0008 (52ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-52.pth", "dict", None],
-                # ["Wass 0.0008 (51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.01_epoch-51.pth", "dict", None],
-                # ["Wass 0.0008 (a,53ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-53.pth", "dict", None],
-                # ["Wass 0.0008 (a,52ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-52.pth", "dict", None],
+                 ["Wass 0.005", "models/cifar_frank_eps-0.005_epoch-30.pth", "dict", None],
+                 ["Wass 0.001", "models/cifar_frank_eps-0.001_epoch-30.pth", "dict", None],
+                 ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
+                 ["Wass 0.0005", "models/cifar_frank_eps-0.0005_epoch-30.pth", "dict", None],
+                 ["Wass 0.0001", "models/cifar_frank_eps-0.0001_epoch-30.pth", "dict", None],
 #                ["Wass 0.0008 (a,51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-51.pth", "dict", None],
 #                ["Wass 0.01 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-20.pth", "dict", None],
 #                ["Wass 0.001 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.001_epoch-20.pth", "dict", None],
@@ -111,7 +110,8 @@ def main():
     
 
 
-    mean_acc = [0 for i in models_info]
+    mean_acc = [[0 for i in models_info] for j in range(6)]
+    tot_mean = [0 for i in models_info]
     cnt = 0
     for corr in corruptions:
         print()
@@ -127,15 +127,23 @@ def main():
                     acc_corr[j] = clean_accuracy(net, x_corr.cuda(), y_corr.cuda())
                 elif model[2] == "dict" or model[2] == "net":
                     acc_corr[j] = clean_accuracy(net, ((x_corr.cuda() - mu) / std), y_corr.cuda())
-                mean_acc[j] += acc_corr[j]
+                mean_acc[i][j] += acc_corr[j]
+                tot_mean[j] += acc_corr[j]
                 prnt += ["{:.4f}".format(acc_corr[j])]
             print_info("{} {}".format(corr, i), prnt)
 
+    for i in range(1,6):
+        prnt = []
+        for acc in mean_acc[i]:
+            prnt += ["{:.4f}".format(acc / cnt * 5)]
+        print()
+        print_info("Average {}".format(i), prnt)
+
     prnt = []
-    for acc in mean_acc:
+    for acc in tot_mean:
         prnt += ["{:.4f}".format(acc / cnt)]
     print()
-    print_info("Average", prnt)
+    print_info("Total Average", prnt)
     
 
 
