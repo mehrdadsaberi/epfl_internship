@@ -42,7 +42,7 @@ class Wasserstein_POT(FakeNet):
                 #         j1 = p1 - i1 * Y
                 #         i2 = p2 // Y
                 #         j2 = p2 - i2 * Y
-                #         self.M[p1,p2] = (i1 - i2) ** 2  + (j1 - j2) ** 2
+                #         self.M[p1,p2] = ((i1 - i2) ** 2  + (j1 - j2) ** 2) ** (1 / 2)
                 # torch.save(self.M,"cmats/l2.pt")
                 # print("cost matrix calculation done! time:",time.time() - tmp_time)
                 # exit()

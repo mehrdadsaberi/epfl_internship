@@ -56,7 +56,10 @@ class CustomDataset(Dataset):
         return sample
     
 
-corruptions = ["jpeg_compression", "elastic_transform"]
+corruptions = ["shot_noise", "motion_blur", "snow", "pixelate",
+               "gaussian_noise", "defocus_blur", "brightness", "fog",
+               "zoom_blur", "frost", "glass_blur", "impulse_noise", "contrast",
+               "jpeg_compression", "elastic_transform"]
 
 #corruptions = ["elastic_transform"]
 

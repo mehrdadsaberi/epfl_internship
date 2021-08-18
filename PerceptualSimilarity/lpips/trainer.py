@@ -248,6 +248,8 @@ def score_2afc_dataset(data_loader, func, name=''):
 
     i = 0
     for data in tqdm(data_loader.load_data(), desc=name):
+        if i >= 1000:
+            break
         d0 = func(data['ref'],data['p0']).data.cpu().numpy().flatten()
         d1 = func(data['ref'],data['p1']).data.cpu().numpy().flatten()
         gt = data['judge'].cpu().numpy().flatten()
@@ -258,8 +260,8 @@ def score_2afc_dataset(data_loader, func, name=''):
         nd1s = np.array(d1s)
         ngts = np.array(gts)
 
-        #scores = (nd0s<nd1s)*(1.-ngts) + (nd1s<nd0s)*ngts + (nd1s==nd0s)*.5
-        #print(i, "|", np.mean(scores))
+        scores = (nd0s<nd1s)*(1.-ngts) + (nd1s<nd0s)*ngts + (nd1s==nd0s)*.5
+        print(i, "|", np.mean(scores))
         
         # img_ref = data['ref'][0].cpu().numpy() * 0.5 + 0.5
         # img_ref = np.swapaxes(img_ref, 0, 2) 
