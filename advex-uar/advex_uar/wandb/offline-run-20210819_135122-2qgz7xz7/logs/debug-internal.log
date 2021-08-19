@@ -1,0 +1,82 @@
+2021-08-19 13:51:43,353 INFO    MainThread:41320 [internal.py:wandb_internal():91] W&B internal server running at pid: 41320, started at: 2021-08-19 13:51:42.876598
+2021-08-19 13:51:43,357 INFO    WriterThread:41320 [datastore.py:open_for_write():77] open: /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_135122-2qgz7xz7/run-2qgz7xz7.wandb
+2021-08-19 13:51:43,357 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: run_start
+2021-08-19 13:51:44,720 DEBUG   HandlerThread:41320 [meta.py:__init__():34] meta init
+2021-08-19 13:51:44,721 DEBUG   HandlerThread:41320 [meta.py:__init__():48] meta init done
+2021-08-19 13:51:44,721 DEBUG   HandlerThread:41320 [meta.py:probe():190] probe
+2021-08-19 13:51:45,590 DEBUG   HandlerThread:41320 [meta.py:_setup_git():180] setup git
+2021-08-19 13:51:53,362 DEBUG   HandlerThread:41320 [meta.py:_setup_git():187] setup git done
+2021-08-19 13:51:54,347 DEBUG   HandlerThread:41320 [meta.py:_save_pip():52] save pip
+2021-08-19 13:51:55,530 DEBUG   HandlerThread:41320 [meta.py:_save_pip():66] save pip done
+2021-08-19 13:51:55,530 DEBUG   HandlerThread:41320 [meta.py:probe():231] probe done
+2021-08-19 13:53:42,029 WARNING MainThread:41320 [internal.py:wandb_internal():146] Internal process interrupt: 1
+2021-08-19 13:53:42,548 DEBUG   SenderThread:41320 [sender.py:send():117] send: exit
+2021-08-19 13:53:42,548 INFO    SenderThread:41320 [sender.py:send_exit():195] handling exit code: 1
+2021-08-19 13:53:42,550 INFO    SenderThread:41320 [sender.py:send_exit():203] send defer
+2021-08-19 13:53:42,550 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: poll_exit
+2021-08-19 13:53:42,551 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,551 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,551 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: poll_exit
+2021-08-19 13:53:42,551 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 0
+2021-08-19 13:53:42,552 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,552 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,552 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 0
+2021-08-19 13:53:42,552 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 1
+2021-08-19 13:53:42,553 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,553 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 1
+2021-08-19 13:53:42,781 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,781 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,782 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 1
+2021-08-19 13:53:42,782 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 2
+2021-08-19 13:53:42,782 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,783 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 2
+2021-08-19 13:53:42,783 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,783 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,783 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 2
+2021-08-19 13:53:42,783 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 3
+2021-08-19 13:53:42,784 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,784 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 3
+2021-08-19 13:53:42,784 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,784 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,784 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 3
+2021-08-19 13:53:42,785 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 4
+2021-08-19 13:53:42,785 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,785 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 4
+2021-08-19 13:53:42,785 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,786 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,786 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 4
+2021-08-19 13:53:42,786 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 5
+2021-08-19 13:53:42,787 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,787 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 5
+2021-08-19 13:53:42,787 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,787 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,787 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 5
+2021-08-19 13:53:42,788 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 6
+2021-08-19 13:53:42,788 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,788 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 6
+2021-08-19 13:53:42,788 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,789 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,789 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 6
+2021-08-19 13:53:42,789 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 7
+2021-08-19 13:53:42,789 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,790 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 7
+2021-08-19 13:53:42,790 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,790 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,790 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 7
+2021-08-19 13:53:42,790 INFO    SenderThread:41320 [sender.py:send_request_defer():248] send defer: 8
+2021-08-19 13:53:42,791 DEBUG   SenderThread:41320 [sender.py:send():117] send: final
+2021-08-19 13:53:42,791 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: defer
+2021-08-19 13:53:42,791 INFO    HandlerThread:41320 [handler.py:handle_request_defer():108] handle defer: 8
+2021-08-19 13:53:42,792 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:42,792 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: defer
+2021-08-19 13:53:42,792 INFO    SenderThread:41320 [sender.py:send_request_defer():212] handle sender defer: 8
+2021-08-19 13:53:44,556 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: poll_exit
+2021-08-19 13:53:44,556 DEBUG   SenderThread:41320 [sender.py:send():117] send: request
+2021-08-19 13:53:44,556 DEBUG   SenderThread:41320 [sender.py:send_request():126] send_request: poll_exit
+2021-08-19 13:53:44,558 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: get_summary
+2021-08-19 13:53:44,560 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: sampled_history
+2021-08-19 13:53:44,561 DEBUG   HandlerThread:41320 [handler.py:handle_request():94] handle_request: shutdown
+2021-08-19 13:53:44,562 INFO    HandlerThread:41320 [handler.py:finish():333] shutting down handler
+2021-08-19 13:53:44,792 INFO    WriterThread:41320 [datastore.py:close():258] close: /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_135122-2qgz7xz7/run-2qgz7xz7.wandb
+2021-08-19 13:53:45,557 INFO    SenderThread:41320 [sender.py:finish():766] shutting down sender
+2021-08-19 13:53:45,923 INFO    MainThread:41320 [internal.py:handle_exit():78] Internal process exited

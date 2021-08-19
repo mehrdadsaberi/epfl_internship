@@ -1,0 +1,70 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7fae16a320d0> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.2722), 'std_acc': tensor(0.9297), 'adv_loss': tensor(1.6576), 'adv_acc': tensor(0.5312)}
+Batch 1
+{'std_loss': tensor(0.3661), 'std_acc': tensor(0.8750), 'adv_loss': tensor(1.7022), 'adv_acc': tensor(0.5117)}
+Batch 2
+{'std_loss': tensor(0.3796), 'std_acc': tensor(0.8724), 'adv_loss': tensor(1.6831), 'adv_acc': tensor(0.5130)}
+Batch 3
+{'std_loss': tensor(0.3783), 'std_acc': tensor(0.8711), 'adv_loss': tensor(1.6661), 'adv_acc': tensor(0.5195)}
+Batch 4
+{'std_loss': tensor(0.3783), 'std_acc': tensor(0.8672), 'adv_loss': tensor(1.6419), 'adv_acc': tensor(0.5250)}
+Batch 5
+{'std_loss': tensor(0.4012), 'std_acc': tensor(0.8594), 'adv_loss': tensor(1.6462), 'adv_acc': tensor(0.5247)}
+Batch 6
+{'std_loss': tensor(0.4142), 'std_acc': tensor(0.8560), 'adv_loss': tensor(1.6228), 'adv_acc': tensor(0.5257)}
+Batch 7
+{'std_loss': tensor(0.4082), 'std_acc': tensor(0.8633), 'adv_loss': tensor(1.6237), 'adv_acc': tensor(0.5264)}
+Batch 8
+{'std_loss': tensor(0.4272), 'std_acc': tensor(0.8602), 'adv_loss': tensor(1.6159), 'adv_acc': tensor(0.5286)}
+Batch 9
+{'std_loss': tensor(0.4224), 'std_acc': tensor(0.8609), 'adv_loss': tensor(1.6034), 'adv_acc': tensor(0.5320)}
+Batch 10
+{'std_loss': tensor(0.4252), 'std_acc': tensor(0.8594), 'adv_loss': tensor(1.5942), 'adv_acc': tensor(0.5327)}
+Batch 11
+{'std_loss': tensor(0.4244), 'std_acc': tensor(0.8581), 'adv_loss': tensor(1.5728), 'adv_acc': tensor(0.5339)}
+Batch 12
+{'std_loss': tensor(0.4274), 'std_acc': tensor(0.8558), 'adv_loss': tensor(1.5587), 'adv_acc': tensor(0.5355)}
+Batch 13
+{'std_loss': tensor(0.4289), 'std_acc': tensor(0.8544), 'adv_loss': tensor(1.5640), 'adv_acc': tensor(0.5329)}
+Batch 14
+{'std_loss': tensor(0.4318), 'std_acc': tensor(0.8542), 'adv_loss': tensor(1.5664), 'adv_acc': tensor(0.5333)}
+Batch 15
+{'std_loss': tensor(0.4433), 'std_acc': tensor(0.8467), 'adv_loss': tensor(1.5780), 'adv_acc': tensor(0.5283)}
+Batch 16
+{'std_loss': tensor(0.4546), 'std_acc': tensor(0.8451), 'adv_loss': tensor(1.5783), 'adv_acc': tensor(0.5271)}
+Batch 17
+{'std_loss': tensor(0.4569), 'std_acc': tensor(0.8429), 'adv_loss': tensor(1.5673), 'adv_acc': tensor(0.5278)}
+Batch 18
+{'std_loss': tensor(0.4621), 'std_acc': tensor(0.8413), 'adv_loss': tensor(1.5792), 'adv_acc': tensor(0.5251)}
+Batch 19
+{'std_loss': tensor(0.4692), 'std_acc': tensor(0.8395), 'adv_loss': tensor(1.5899), 'adv_acc': tensor(0.5223)}
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x7fae9eea9dd0>
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1324, in __del__
+    self._shutdown_workers()
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1297, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/process.py", line 140, in join
+    res = self._popen.wait(timeout)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 45, in wait
+    if not wait([self.sentinel], timeout):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/connection.py", line 920, in wait
+    ready = selector.select(timeout)
+  File "/opt/anaconda3/lib/python3.7/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt: 
+
+Aborted!
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 894, in handle
+    self.emit(record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1127, in emit
+    StreamHandler.emit(self, record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1029, in emit
+    self.flush()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1009, in flush
+    self.stream.flush()
+KeyboardInterrupt

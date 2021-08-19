@@ -1,0 +1,17 @@
+2021-08-19 12:08:46,110 INFO    MainThread:47060 [internal.py:wandb_internal():91] W&B internal server running at pid: 47060, started at: 2021-08-19 12:08:46.108410
+2021-08-19 12:08:46,113 INFO    WriterThread:47060 [datastore.py:open_for_write():77] open: /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_120845-ekhs4rcy/run-ekhs4rcy.wandb
+2021-08-19 12:08:46,114 DEBUG   HandlerThread:47060 [handler.py:handle_request():94] handle_request: run_start
+2021-08-19 12:08:47,561 DEBUG   HandlerThread:47060 [meta.py:__init__():34] meta init
+2021-08-19 12:08:47,561 DEBUG   HandlerThread:47060 [meta.py:__init__():48] meta init done
+2021-08-19 12:08:47,561 DEBUG   HandlerThread:47060 [meta.py:probe():190] probe
+2021-08-19 12:08:47,570 DEBUG   HandlerThread:47060 [meta.py:_setup_git():180] setup git
+2021-08-19 12:08:47,949 DEBUG   HandlerThread:47060 [meta.py:_setup_git():187] setup git done
+2021-08-19 12:08:47,950 DEBUG   HandlerThread:47060 [meta.py:_save_pip():52] save pip
+2021-08-19 12:08:47,955 DEBUG   HandlerThread:47060 [meta.py:_save_pip():66] save pip done
+2021-08-19 12:08:47,955 DEBUG   HandlerThread:47060 [meta.py:probe():231] probe done
+2021-08-19 12:09:39,098 WARNING MainThread:47060 [internal.py:wandb_internal():146] Internal process interrupt: 1
+2021-08-19 12:10:03,645 WARNING MainThread:47060 [internal.py:wandb_internal():146] Internal process interrupt: 2
+2021-08-19 12:10:03,645 ERROR   MainThread:47060 [internal.py:wandb_internal():149] Internal process interrupted.
+2021-08-19 12:10:04,185 INFO    SenderThread:47060 [sender.py:finish():766] shutting down sender
+2021-08-19 12:10:04,463 INFO    WriterThread:47060 [datastore.py:close():258] close: /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_120845-ekhs4rcy/run-ekhs4rcy.wandb
+2021-08-19 12:10:05,070 INFO    MainThread:47060 [internal.py:handle_exit():78] Internal process exited

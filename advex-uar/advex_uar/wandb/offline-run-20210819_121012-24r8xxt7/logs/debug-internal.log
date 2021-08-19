@@ -1,0 +1,13 @@
+2021-08-19 12:10:13,609 INFO    MainThread:48299 [internal.py:wandb_internal():91] W&B internal server running at pid: 48299, started at: 2021-08-19 12:10:13.607477
+2021-08-19 12:10:13,611 INFO    WriterThread:48299 [datastore.py:open_for_write():77] open: /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_121012-24r8xxt7/run-24r8xxt7.wandb
+2021-08-19 12:10:13,612 DEBUG   HandlerThread:48299 [handler.py:handle_request():94] handle_request: run_start
+2021-08-19 12:10:15,219 DEBUG   HandlerThread:48299 [meta.py:__init__():34] meta init
+2021-08-19 12:10:15,219 DEBUG   HandlerThread:48299 [meta.py:__init__():48] meta init done
+2021-08-19 12:10:15,219 DEBUG   HandlerThread:48299 [meta.py:probe():190] probe
+2021-08-19 12:10:15,227 DEBUG   HandlerThread:48299 [meta.py:_setup_git():180] setup git
+2021-08-19 12:10:15,283 DEBUG   HandlerThread:48299 [meta.py:_setup_git():187] setup git done
+2021-08-19 12:10:15,284 DEBUG   HandlerThread:48299 [meta.py:_save_pip():52] save pip
+2021-08-19 12:10:15,289 DEBUG   HandlerThread:48299 [meta.py:_save_pip():66] save pip done
+2021-08-19 12:10:15,289 DEBUG   HandlerThread:48299 [meta.py:probe():231] probe done
+2021-08-19 12:10:37,813 WARNING MainThread:48299 [internal.py:wandb_internal():146] Internal process interrupt: 1
+2021-08-19 12:11:33,596 INFO    MainThread:48299 [internal.py:handle_exit():78] Internal process exited

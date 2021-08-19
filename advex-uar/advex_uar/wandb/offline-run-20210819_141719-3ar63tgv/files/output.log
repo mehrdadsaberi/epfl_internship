@@ -1,0 +1,48 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7f7b4a7d3790> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.3993), 'std_acc': tensor(0.8672), 'adv_loss': tensor(18.4973), 'adv_acc': tensor(0.)}
+Batch 1
+{'std_loss': tensor(0.4207), 'std_acc': tensor(0.8477), 'adv_loss': tensor(18.4093), 'adv_acc': tensor(0.)}
+Batch 2
+{'std_loss': tensor(0.4224), 'std_acc': tensor(0.8516), 'adv_loss': tensor(18.3943), 'adv_acc': tensor(0.)}
+Batch 3
+{'std_loss': tensor(0.3783), 'std_acc': tensor(0.8691), 'adv_loss': tensor(18.3902), 'adv_acc': tensor(0.)}
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x7f7be386edd0>
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1324, in __del__
+    self._shutdown_workers()
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1297, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/process.py", line 140, in join
+    res = self._popen.wait(timeout)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 45, in wait
+    if not wait([self.sentinel], timeout):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/connection.py", line 920, in wait
+    ready = selector.select(timeout)
+  File "/opt/anaconda3/lib/python3.7/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt: 
+
+Aborted!
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 894, in handle
+    self.emit(record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1127, in emit
+    StreamHandler.emit(self, record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1029, in emit
+    self.flush()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1009, in flush
+    self.stream.flush()
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 2034, in shutdown
+    h.close()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1103, in close

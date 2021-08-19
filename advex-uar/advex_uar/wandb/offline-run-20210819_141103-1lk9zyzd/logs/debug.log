@@ -1,0 +1,85 @@
+2021-08-19 14:11:19,438 INFO    MainThread:15629 [wandb_setup.py:_flush():70] setting env: {'mode': 'dryrun'}
+2021-08-19 14:11:19,438 INFO    MainThread:15629 [wandb_setup.py:_flush():70] multiprocessing start_methods=fork,spawn,forkserver, using: spawn
+2021-08-19 14:11:19,438 INFO    MainThread:15629 [wandb_init.py:_log_setup():319] Logging user logs to /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_141103-1lk9zyzd/logs/debug.log
+2021-08-19 14:11:19,439 INFO    MainThread:15629 [wandb_init.py:_log_setup():320] Logging internal logs to /tmldata1/saberika/advex-uar/advex_uar/wandb/offline-run-20210819_141103-1lk9zyzd/logs/debug-internal.log
+2021-08-19 14:11:19,439 INFO    MainThread:15629 [wandb_init.py:init():351] calling init triggers
+2021-08-19 14:11:19,439 INFO    MainThread:15629 [wandb_init.py:init():358] wandb.init called with sweep_config: {}
+config: {}
+2021-08-19 14:11:19,439 INFO    MainThread:15629 [wandb_init.py:init():404] starting backend
+2021-08-19 14:11:19,454 INFO    MainThread:15629 [backend.py:ensure_launched():81] starting backend process...
+2021-08-19 14:11:20,488 INFO    MainThread:15629 [backend.py:ensure_launched():86] started backend process with pid: 16170
+2021-08-19 14:11:20,648 INFO    MainThread:15629 [wandb_init.py:init():413] backend started and connected
+2021-08-19 14:11:20,650 INFO    MainThread:15629 [wandb_init.py:init():436] updated telemetry
+2021-08-19 14:11:20,651 INFO    MainThread:15629 [wandb_init.py:init():495] starting run threads in backend
+2021-08-19 14:11:25,653 INFO    MainThread:15629 [wandb_run.py:_console_start():1411] atexit reg
+2021-08-19 14:11:26,667 INFO    MainThread:15629 [wandb_run.py:_redirect():1274] redirect: SettingsConsole.REDIRECT
+2021-08-19 14:11:26,668 INFO    MainThread:15629 [wandb_run.py:_redirect():1279] Redirecting console.
+2021-08-19 14:11:26,668 INFO    MainThread:15629 [redirect.py:install():213] install start
+2021-08-19 14:11:26,668 INFO    MainThread:15629 [redirect.py:install():228] install stop
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [redirect.py:install():213] install start
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [redirect.py:install():228] install stop
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [wandb_run.py:_redirect():1325] Redirects installed.
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [wandb_init.py:init():518] run started, returning control to user process
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set dataset = cifar-10 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,669 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb dataset cifar-10 None
+2021-08-19 14:11:26,670 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set attack = jpeg_linf - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,670 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb attack jpeg_linf None
+2021-08-19 14:11:26,670 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set epsilon = 0.25 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,671 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb epsilon 0.25 None
+2021-08-19 14:11:26,671 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set n_iters = 200 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,671 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb n_iters 200 None
+2021-08-19 14:11:26,671 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set step_size = 0.017677669529663688 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,672 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb step_size 0.017677669529663688 None
+2021-08-19 14:11:26,672 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set ckpt_path = models/cifar_frank_eps-0.05_epoch-30.pth - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,672 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb ckpt_path models/cifar_frank_eps-0.05_epoch-30.pth None
+2021-08-19 14:11:26,672 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set use_wandb = True - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,672 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb use_wandb True None
+2021-08-19 14:11:26,673 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set wandb_project = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,673 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb wandb_project None None
+2021-08-19 14:11:26,673 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set tag = eval - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,673 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb tag eval None
+2021-08-19 14:11:26,674 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set dataset_path = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,674 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb dataset_path None None
+2021-08-19 14:11:26,674 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set resnet_size = 50 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,674 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb resnet_size 50 None
+2021-08-19 14:11:26,675 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set class_downsample_factor = 1 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,675 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb class_downsample_factor 1 None
+2021-08-19 14:11:26,675 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set wandb_username = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,675 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb wandb_username None None
+2021-08-19 14:11:26,675 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set wandb_ckpt_project = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,676 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb wandb_ckpt_project None None
+2021-08-19 14:11:26,676 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set wandb_run_id = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,676 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb wandb_run_id None None
+2021-08-19 14:11:26,676 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set use_fp16 = False - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,676 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb use_fp16 False None
+2021-08-19 14:11:26,677 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set batch_size = 128 - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,677 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb batch_size 128 None
+2021-08-19 14:11:26,677 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set corruption_type = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,677 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb corruption_type None None
+2021-08-19 14:11:26,677 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set corruption_name = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb corruption_name None None
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set corruption_level = None - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb corruption_level None None
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set use_max_step = False - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb use_max_step False None
+2021-08-19 14:11:26,678 INFO    MainThread:15629 [wandb_config.py:__setitem__():142] config set run_id = 1lk9zyzd - <bound method Run._config_callback of <wandb.sdk.wandb_run.Run object at 0x7faa4bb62750>>
+2021-08-19 14:11:26,679 INFO    MainThread:15629 [wandb_run.py:_config_callback():663] config_cb run_id 1lk9zyzd None
+2021-08-19 14:17:13,415 INFO    MainThread:15629 [wandb_run.py:_atexit_cleanup():1381] got exitcode: 1
+2021-08-19 14:17:13,541 INFO    MainThread:15629 [wandb_run.py:_restore():1353] restore
+2021-08-19 14:17:13,541 INFO    MainThread:15629 [redirect.py:uninstall():232] uninstall start
+2021-08-19 14:17:13,542 INFO    MainThread:15629 [redirect.py:_stop():287] _stop: stdout
+2021-08-19 14:17:13,542 INFO    MainThread:15629 [redirect.py:_stop():293] _stop closed: stdout
+2021-08-19 14:17:13,542 INFO    stdout    :15629 [redirect.py:_pipe_relay():129] relay done saw last write: stdout
+2021-08-19 14:17:13,543 INFO    stdout    :15629 [redirect.py:_pipe_relay():145] relay done done: stdout
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:_stop():299] _stop joined: stdout
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:_stop():301] _stop rd closed: stdout
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:uninstall():236] uninstall done
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:uninstall():232] uninstall start
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:_stop():287] _stop: stderr
+2021-08-19 14:17:13,543 INFO    MainThread:15629 [redirect.py:_stop():293] _stop closed: stderr
+2021-08-19 14:17:13,544 INFO    stderr    :15629 [redirect.py:_pipe_relay():129] relay done saw last write: stderr
+2021-08-19 14:17:13,544 INFO    stderr    :15629 [redirect.py:_pipe_relay():145] relay done done: stderr
+2021-08-19 14:17:13,544 INFO    MainThread:15629 [redirect.py:_stop():299] _stop joined: stderr
+2021-08-19 14:17:13,544 INFO    MainThread:15629 [redirect.py:_stop():301] _stop rd closed: stderr
+2021-08-19 14:17:13,544 INFO    MainThread:15629 [redirect.py:uninstall():236] uninstall done
+2021-08-19 14:17:14,380 INFO    MainThread:15629 [wandb_run.py:_wait_for_finish():1504] got exit ret: 

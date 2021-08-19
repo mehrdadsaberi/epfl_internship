@@ -1,0 +1,22 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7f758d24f8d0> {}
+A
+Traceback (most recent call last):
+  File "examples/eval.py", line 136, in <module>
+    main()
+  File "/opt/anaconda3/lib/python3.7/site-packages/click/core.py", line 764, in __call__
+    return self.main(*args, **kwargs)
+  File "/opt/anaconda3/lib/python3.7/site-packages/click/core.py", line 717, in main
+    rv = self.invoke(ctx)
+  File "/opt/anaconda3/lib/python3.7/site-packages/click/core.py", line 956, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "/opt/anaconda3/lib/python3.7/site-packages/click/core.py", line 555, in invoke
+    return callback(*args, **kwargs)
+  File "examples/eval.py", line 133, in main
+    run(**flags)
+  File "examples/eval.py", line 68, in run
+    FLAGS.n_iters, FLAGS.step_size, False)
+  File "/home/saberika/.local/lib/python3.7/site-packages/advex_uar/common/pyt_common.py", line 106, in get_attack
+    return _get_attack(*args, **kwargs)
+  File "/home/saberika/.local/lib/python3.7/site-packages/advex_uar/common/pyt_common.py", line 67, in _get_attack
+    step_size, resol, norm='linf',
+UnboundLocalError: local variable 'resol' referenced before assignment

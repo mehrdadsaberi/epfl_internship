@@ -1,0 +1,36 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7f22228709d0> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.6260), 'std_acc': tensor(0.7891), 'adv_loss': tensor(1.0934), 'adv_acc': tensor(0.6016)}
+Batch 1
+{'std_loss': tensor(0.6476), 'std_acc': tensor(0.7891), 'adv_loss': tensor(1.0933), 'adv_acc': tensor(0.6250)}
+Batch 2
+{'std_loss': tensor(0.6798), 'std_acc': tensor(0.7708), 'adv_loss': tensor(1.0739), 'adv_acc': tensor(0.6380)}
+Batch 3
+{'std_loss': tensor(0.6435), 'std_acc': tensor(0.7773), 'adv_loss': tensor(1.0230), 'adv_acc': tensor(0.6562)}
+Batch 4
+{'std_loss': tensor(0.6188), 'std_acc': tensor(0.7891), 'adv_loss': tensor(0.9711), 'adv_acc': tensor(0.6641)}
+Batch 5
+{'std_loss': tensor(0.6582), 'std_acc': tensor(0.7760), 'adv_loss': tensor(0.9937), 'adv_acc': tensor(0.6562)}
+Batch 6
+{'std_loss': tensor(0.6637), 'std_acc': tensor(0.7746), 'adv_loss': tensor(1.0254), 'adv_acc': tensor(0.6473)}
+Batch 7
+{'std_loss': tensor(0.6494), 'std_acc': tensor(0.7793), 'adv_loss': tensor(1.0184), 'adv_acc': tensor(0.6523)}
+
+Aborted!
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 894, in handle
+    self.emit(record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1127, in emit
+    StreamHandler.emit(self, record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1029, in emit
+    self.flush()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1009, in flush
+    self.stream.flush()
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt

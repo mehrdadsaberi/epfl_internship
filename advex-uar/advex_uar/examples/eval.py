@@ -10,6 +10,10 @@ from advex_uar.eval import CIFAR10Evaluator, CIFAR10CEvaluator
 from advex_uar.common.pyt_common import *
 from advex_uar.common import FlagHolder
 
+from resnet import ResNet18
+
+import setGPU
+
 def get_ckpt(FLAGS):
     if FLAGS.ckpt_path is not None:
         print('Loading ckpt from {}'.format(FLAGS.ckpt_path))
@@ -47,12 +51,20 @@ def run(**flag_kwargs):
     model_dataset = FLAGS.dataset
     if model_dataset == 'imagenet-c':
         model_dataset = 'imagenet'
-    model = get_model(model_dataset, FLAGS.resnet_size, nb_classes)
-    ckpt = get_ckpt(FLAGS)
-    model.load_state_dict(ckpt['model'])
+
+    model = ResNet18().cuda()
+    ckpt = torch.load(FLAGS.ckpt_path)
+    model.load_state_dict(ckpt["model_state_dict"])
+    model.eval()
+
+    # model = get_model(model_dataset, FLAGS.resnet_size, nb_classes)
+    # ckpt = get_ckpt(FLAGS)
+    # model.load_state_dict(ckpt['model'])
+
 
     attack = get_attack(FLAGS.dataset, FLAGS.attack, FLAGS.epsilon,
                         FLAGS.n_iters, FLAGS.step_size, False)
+
 
     if FLAGS.dataset == 'imagenet':
         Evaluator = ImagenetEvaluator
@@ -62,6 +74,7 @@ def run(**flag_kwargs):
         Evaluator = CIFAR10Evaluator
     elif FLAGS.dataset == 'cifar-10-c':
         Evaluator = CIFAR10CEvaluator
+
         
     evaluator = Evaluator(model=model, attack=attack, dataset=FLAGS.dataset,
                           dataset_path=FLAGS.dataset_path, nb_classes=nb_classes,

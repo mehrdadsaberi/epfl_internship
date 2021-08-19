@@ -1,0 +1,33 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7f88074297d0> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.4696), 'std_acc': tensor(0.8594), 'adv_loss': tensor(20.8197), 'adv_acc': tensor(0.)}
+Batch 1
+{'std_loss': tensor(0.4495), 'std_acc': tensor(0.8477), 'adv_loss': tensor(20.7788), 'adv_acc': tensor(0.)}
+Batch 2
+{'std_loss': tensor(0.4353), 'std_acc': tensor(0.8568), 'adv_loss': tensor(20.8912), 'adv_acc': tensor(0.)}
+Batch 3
+{'std_loss': tensor(0.4189), 'std_acc': tensor(0.8652), 'adv_loss': tensor(20.8097), 'adv_acc': tensor(0.)}
+
+Aborted!
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 894, in handle
+    self.emit(record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1127, in emit
+    StreamHandler.emit(self, record)
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1029, in emit
+    self.flush()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1009, in flush
+    self.stream.flush()
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 28, in poll
+    pid, sts = os.waitpid(self.pid, flag)
+KeyboardInterrupt
+Error in atexit._run_exitfuncs:
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 2034, in shutdown
+    h.close()
+  File "/opt/anaconda3/lib/python3.7/logging/__init__.py", line 1103, in close

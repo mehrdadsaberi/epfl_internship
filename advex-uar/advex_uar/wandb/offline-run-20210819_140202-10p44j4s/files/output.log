@@ -1,0 +1,69 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7ff9c019f850> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.4696), 'std_acc': tensor(0.8594), 'adv_loss': tensor(1.5906), 'adv_acc': tensor(0.5859)}
+Batch 1
+{'std_loss': tensor(0.4495), 'std_acc': tensor(0.8477), 'adv_loss': tensor(1.4390), 'adv_acc': tensor(0.6172)}
+Batch 2
+{'std_loss': tensor(0.4353), 'std_acc': tensor(0.8568), 'adv_loss': tensor(1.4209), 'adv_acc': tensor(0.6146)}
+Batch 3
+{'std_loss': tensor(0.4189), 'std_acc': tensor(0.8652), 'adv_loss': tensor(1.3825), 'adv_acc': tensor(0.6289)}
+Batch 4
+{'std_loss': tensor(0.3814), 'std_acc': tensor(0.8781), 'adv_loss': tensor(1.3592), 'adv_acc': tensor(0.6406)}
+Batch 5
+{'std_loss': tensor(0.4010), 'std_acc': tensor(0.8685), 'adv_loss': tensor(1.4121), 'adv_acc': tensor(0.6328)}
+Batch 6
+{'std_loss': tensor(0.3932), 'std_acc': tensor(0.8694), 'adv_loss': tensor(1.4301), 'adv_acc': tensor(0.6328)}
+Batch 7
+{'std_loss': tensor(0.3966), 'std_acc': tensor(0.8730), 'adv_loss': tensor(1.4098), 'adv_acc': tensor(0.6338)}
+Batch 8
+{'std_loss': tensor(0.3973), 'std_acc': tensor(0.8733), 'adv_loss': tensor(1.3765), 'adv_acc': tensor(0.6319)}
+Batch 9
+{'std_loss': tensor(0.3938), 'std_acc': tensor(0.8750), 'adv_loss': tensor(1.3726), 'adv_acc': tensor(0.6320)}
+Batch 10
+{'std_loss': tensor(0.3782), 'std_acc': tensor(0.8807), 'adv_loss': tensor(1.3437), 'adv_acc': tensor(0.6349)}
+Batch 11
+{'std_loss': tensor(0.3668), 'std_acc': tensor(0.8835), 'adv_loss': tensor(1.3342), 'adv_acc': tensor(0.6374)}
+Batch 12
+{'std_loss': tensor(0.3604), 'std_acc': tensor(0.8852), 'adv_loss': tensor(1.3415), 'adv_acc': tensor(0.6358)}
+Batch 13
+{'std_loss': tensor(0.3755), 'std_acc': tensor(0.8828), 'adv_loss': tensor(1.3375), 'adv_acc': tensor(0.6362)}
+Batch 14
+{'std_loss': tensor(0.3816), 'std_acc': tensor(0.8813), 'adv_loss': tensor(1.3489), 'adv_acc': tensor(0.6385)}
+Batch 15
+{'std_loss': tensor(0.3924), 'std_acc': tensor(0.8789), 'adv_loss': tensor(1.3625), 'adv_acc': tensor(0.6382)}
+Batch 16
+{'std_loss': tensor(0.3997), 'std_acc': tensor(0.8768), 'adv_loss': tensor(1.3596), 'adv_acc': tensor(0.6406)}
+Batch 17
+{'std_loss': tensor(0.4037), 'std_acc': tensor(0.8772), 'adv_loss': tensor(1.3621), 'adv_acc': tensor(0.6411)}
+Batch 18
+{'std_loss': tensor(0.4059), 'std_acc': tensor(0.8771), 'adv_loss': tensor(1.3733), 'adv_acc': tensor(0.6365)}
+Batch 19
+{'std_loss': tensor(0.4195), 'std_acc': tensor(0.8750), 'adv_loss': tensor(1.3814), 'adv_acc': tensor(0.6344)}
+Batch 20
+{'std_loss': tensor(0.4223), 'std_acc': tensor(0.8735), 'adv_loss': tensor(1.3857), 'adv_acc': tensor(0.6343)}
+Batch 21
+{'std_loss': tensor(0.4144), 'std_acc': tensor(0.8757), 'adv_loss': tensor(1.3672), 'adv_acc': tensor(0.6396)}
+Batch 22
+{'std_loss': tensor(0.4082), 'std_acc': tensor(0.8777), 'adv_loss': tensor(1.3601), 'adv_acc': tensor(0.6399)}
+Batch 23
+{'std_loss': tensor(0.4120), 'std_acc': tensor(0.8763), 'adv_loss': tensor(1.3702), 'adv_acc': tensor(0.6374)}
+Batch 24
+{'std_loss': tensor(0.4054), 'std_acc': tensor(0.8778), 'adv_loss': tensor(1.3691), 'adv_acc': tensor(0.6375)}
+Exception ignored in: <function _MultiProcessingDataLoaderIter.__del__ at 0x7ffa61208dd0>
+Traceback (most recent call last):
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1324, in __del__
+    self._shutdown_workers()
+  File "/opt/anaconda3/lib/python3.7/site-packages/torch/utils/data/dataloader.py", line 1297, in _shutdown_workers
+    w.join(timeout=_utils.MP_STATUS_CHECK_INTERVAL)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/process.py", line 140, in join
+    res = self._popen.wait(timeout)
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/popen_fork.py", line 45, in wait
+    if not wait([self.sentinel], timeout):
+  File "/opt/anaconda3/lib/python3.7/multiprocessing/connection.py", line 920, in wait
+    ready = selector.select(timeout)
+  File "/opt/anaconda3/lib/python3.7/selectors.py", line 415, in select
+    fd_event_list = self._selector.poll(timeout)
+KeyboardInterrupt: 
+
+Aborted!

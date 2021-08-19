@@ -1,0 +1,10 @@
+wandb inited <wandb.sdk.wandb_run.Run object at 0x7fd12cc24790> {}
+Files already downloaded and verified
+Batch 0
+{'std_loss': tensor(0.4696), 'std_acc': tensor(0.8594), 'adv_loss': tensor(6.8697), 'adv_acc': tensor(0.1016)}
+Batch 1
+{'std_loss': tensor(0.4495), 'std_acc': tensor(0.8477), 'adv_loss': tensor(6.8113), 'adv_acc': tensor(0.0938)}
+Batch 2
+{'std_loss': tensor(0.4353), 'std_acc': tensor(0.8568), 'adv_loss': tensor(6.6847), 'adv_acc': tensor(0.0833)}
+
+Aborted!
