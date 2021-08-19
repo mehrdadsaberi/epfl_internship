@@ -125,8 +125,8 @@ class BaseEvaluator():
                           'std_acc':std_corr.avg,
                           'adv_loss':adv_loss.avg,
                           'adv_acc':adv_corr.avg}
-            print('Batch', batch_idx)
-            print(run_output)
+            # print('Batch', batch_idx)
+            # print(run_output)
             if batch_idx % 20 == 0:
                 self.logger.log(run_output, batch_idx)
 
