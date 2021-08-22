@@ -15,17 +15,16 @@ import os
 import setGPU
 
 
-def train(model, loader, device, lr, epoch, attacker, args):
-    model.train()
+def train(model, loader, device, lr, epoch, attacker, args, testloader):
 
-    lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
-    # def lr_schedule(t):
-    #     if t < 50:
-    #         return lr
-    #     elif t < 100:
-    #         return lr / 10.
-    #     else:
-    #         return lr / 100.
+    # lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    def lr_schedule(t):
+        if t < 50:
+            return lr
+        elif t < 100:
+            return lr / 10.
+        else:
+            return lr / 100.
     loss_fn = nn.CrossEntropyLoss(reduction="mean")
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
@@ -36,11 +35,17 @@ def train(model, loader, device, lr, epoch, attacker, args):
         total_loss = 0
         cln_correct = 0
         total_cln_loss = 0
+        total_test = 0
+        test_correct = 0
+        total_test_loss = 0
         
         start = torch.cuda.Event(enable_timing=True)
         end = torch.cuda.Event(enable_timing=True)
 
         start.record()
+
+        
+        model.train()
 
         for batch_idx, (cln_data, target) in enumerate(loader):
             cln_data, target = cln_data.to(device), target.to(device)
@@ -81,8 +86,23 @@ def train(model, loader, device, lr, epoch, attacker, args):
             
         end.record()
 
-        print("epoch: {:4d}/{:4d} \t loss: {:.4f} acc: {:3.3f}% \t clean loss: {:.4f} clean acc: {:3.3f}% \t time: {:7.3f}s  lr: {:.5f}"
-              .format(i + 1, epoch, total_loss / len(loader), 100. * correct / total, total_cln_loss / len(loader), 100. * cln_correct / total, start.elapsed_time(end) / 1000, cur_lr))
+        model.eval()
+
+        for batch_idx, (cln_data, target) in enumerate(testloader):
+            test_data, target = cln_data.to(device), target.to(device)
+
+            test_scores = model(test_data)
+            test_loss = loss_fn(test_scores, target)
+            
+            cur_test_correct = test_scores.max(dim=1)[1].eq(target).sum().item()
+
+            test_correct += cur_test_correct
+            total_test += test_scores.size(0)
+            total_test_loss += test_loss.item()
+
+        
+        print("epoch: {:4d}/{:4d} \t loss: {:.4f} acc: {:3.3f}% \t clean loss: {:.4f} clean acc: {:3.3f}% \t test clean loss: {:.4f} test clean acc: {:3.3f}% \t train time: {:7.3f}s  lr: {:.5f}"
+              .format(i + 1, epoch, total_loss / len(loader), 100. * correct / total, total_cln_loss / len(loader), 100. * cln_correct / total, total_test_loss / len(testloader), 100. * test_correct / total_test, start.elapsed_time(end) / 1000, cur_lr))
         
 
         ckpt = {'model_state_dict': model.state_dict()}
@@ -125,9 +145,10 @@ if __name__ == "__main__":
 
     set_seed(0)
 
-    #testset, normalize, unnormalize = str2dataset(args.dataset, train=False)
+    testset, normalize, unnormalize = str2dataset(args.dataset, train=False)
     trainset, normalize, unnormalize = str2dataset(args.dataset, train=True)
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
     net = str2model(path=args.save_model_loc, dataset=args.dataset, pretrained=args.resume).eval().to(device)
     #net = torch.nn.DataParallel(model, device_ids=[0, 1, 2])
@@ -158,7 +179,7 @@ if __name__ == "__main__":
     else:
         assert 0
 
-    train(net, trainloader, device, args.lr, args.epoch, attacker, args)
+    train(net, trainloader, device, args.lr, args.epoch, attacker, args, testloader)
 
     #ckpt = {'model_state_dict': net.state_dict()}
 

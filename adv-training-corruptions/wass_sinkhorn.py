@@ -97,7 +97,7 @@ class Wasserstein_Sinkhorn(FakeNet):
                     thresh_val += pi[k1, k2]
                         
         plt.bar(range(len(tmp_cnt)), tmp_cnt)
-        plt.title("Wass dist: {:.6f}, More than 10: {}".format(dist.mean().item(), thresh_val))
+        plt.title("Wass dist: {:.6f}, More than 10: {:02.2f}%".format(dist.mean().item(), thresh_val / dist.mean().item()))
         plt.savefig("pi_analyze/{:03d}.png".format(self.cnt_plot))
         self.cnt_plot += 1
         plt.close()

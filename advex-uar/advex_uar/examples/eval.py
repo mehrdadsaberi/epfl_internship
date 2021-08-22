@@ -2,6 +2,7 @@ import click
 import importlib
 import os
 
+import json
 import numpy as np
 import torch
 
@@ -62,9 +63,6 @@ def run(**flag_kwargs):
     # model.load_state_dict(ckpt['model'])
 
 
-    attack = get_attack(FLAGS.dataset, FLAGS.attack, FLAGS.epsilon,
-                        FLAGS.n_iters, FLAGS.step_size, False)
-
 
     if FLAGS.dataset == 'imagenet':
         Evaluator = ImagenetEvaluator
@@ -75,14 +73,52 @@ def run(**flag_kwargs):
     elif FLAGS.dataset == 'cifar-10-c':
         Evaluator = CIFAR10CEvaluator
 
+    out_f = open(FLAGS.ckpt_path + ".out", 'w')
+    
+    with open("analysis/calibrations/cifar-10/calibs.out", 'r') as f:
+        atas = json.load(f)
+
+    print("MODEL:", FLAGS.ckpt_path)
+
+    sum_acc = {}
+    sum_ata = {}
+
+    for x in atas:
+        attack_name = x[0][0]
+        epsilon = x[0][1]
+        n_iters = 50 # x[0][2]
+        step_size = x[0][3]
+        ata = x[1]
+
+        attack = get_attack(FLAGS.dataset, attack_name, epsilon,
+                        n_iters, step_size, False)
         
-    evaluator = Evaluator(model=model, attack=attack, dataset=FLAGS.dataset,
+        evaluator = Evaluator(model=model, attack=attack, dataset=FLAGS.dataset,
                           dataset_path=FLAGS.dataset_path, nb_classes=nb_classes,
                           corruption_type=FLAGS.corruption_type, corruption_name=FLAGS.corruption_name,
                           corruption_level=FLAGS.corruption_level,
                           batch_size=FLAGS.batch_size, stride=FLAGS.class_downsample_factor,
                           fp_all_reduce=FLAGS.use_fp16, logger=logger, tag=FLAGS.tag)
-    evaluator.evaluate()
+        std_loss, std_acc, adv_loss, adv_acc = evaluator.evaluate()
+
+        if attack_name not in sum_acc:
+            sum_acc[attack_name] = 0
+            sum_ata[attack_name] = 0
+        sum_acc[attack_name] += adv_acc
+        sum_ata[attack_name] += ata
+
+        out_s = "{} {:.4f} | \t std: {:.4f} \t adv: {:.4f} \t ata: {:.4f}".format(attack_name, epsilon, std_acc, adv_acc, ata)
+        out_f.write(out_s + "\n")
+        out_f.flush()
+        print(out_s)
+
+    for attack_name in sum_acc.keys():
+        out_s = "{} | uar: {:.4f}".format(attack_name, sum_acc[attack_name] / sum_ata[attack_name])
+        out_f.write(out_s + "\n")
+        out_f.flush()
+        print(out_s)
+    
+    out_f.close()
 
 @click.command()
 # wandb options

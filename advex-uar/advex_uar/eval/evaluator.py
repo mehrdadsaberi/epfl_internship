@@ -99,18 +99,18 @@ class BaseEvaluator():
             data_adv = self.attack(self.model, data, rand_target,
                                    avoid_target=False, scale_eps=False)
 
-            for idx in range(target.size()[0]):
-                if target[idx].cpu() not in seen_classes:
-                    seen_classes.append(target[idx].cpu())
-                    orig_image = norm_to_pil_image(data[idx].detach().cpu())
-                    adv_image = norm_to_pil_image(data_adv[idx].detach().cpu())
-                    adv_images.update((orig_image, adv_image, target[idx].cpu()))
+            # for idx in range(target.size()[0]):
+            #     if target[idx].cpu() not in seen_classes:
+            #         seen_classes.append(target[idx].cpu())
+            #         orig_image = norm_to_pil_image(data[idx].detach().cpu())
+            #         adv_image = norm_to_pil_image(data_adv[idx].detach().cpu())
+            #         adv_images.update((orig_image, adv_image, target[idx].cpu()))
 
-            if batch_idx == 0:
-                for idx in range(target.size()[0]):
-                    orig_image = norm_to_pil_image(data[idx].detach().cpu())
-                    adv_image = norm_to_pil_image(data_adv[idx].detach().cpu())
-                    first_batch_images.update((orig_image, adv_image))
+            # if batch_idx == 0:
+            #     for idx in range(target.size()[0]):
+            #         orig_image = norm_to_pil_image(data[idx].detach().cpu())
+            #         adv_image = norm_to_pil_image(data_adv[idx].detach().cpu())
+            #         first_batch_images.update((orig_image, adv_image))
                 
             with torch.no_grad():
                 output_adv = self.model(data_adv)
@@ -127,22 +127,22 @@ class BaseEvaluator():
                           'adv_acc':adv_corr.avg}
             # print('Batch', batch_idx)
             # print(run_output)
-            if batch_idx % 20 == 0:
-                self.logger.log(run_output, batch_idx)
+            # if batch_idx % 20 == 0:
+            #    self.logger.log(run_output, batch_idx)
 
         summary_dict = {'std_acc':std_corr.avg.item(),
                         'adv_acc':adv_corr.avg.item()}
-        self.logger.log_summary(summary_dict)
-        for orig_img, adv_img, target in adv_images.vals:
-            self.logger.log_image(orig_img, 'orig_{}.png'.format(target))
-            self.logger.log_image(adv_img, 'adv_{}.png'.format(target))
-        for idx, imgs in enumerate(first_batch_images.vals):
-            orig_img, adv_img = imgs
-            self.logger.log_image(orig_img, 'init_orig_{}.png'.format(idx))
-            self.logger.log_image(adv_img, 'init_adv_{}.png'.format(idx))
+        # self.logger.log_summary(summary_dict)
+        # for orig_img, adv_img, target in adv_images.vals:
+        #     self.logger.log_image(orig_img, 'orig_{}.png'.format(target))
+        #     self.logger.log_image(adv_img, 'adv_{}.png'.format(target))
+        # for idx, imgs in enumerate(first_batch_images.vals):
+        #     orig_img, adv_img = imgs
+        #     self.logger.log_image(orig_img, 'init_orig_{}.png'.format(idx))
+        #     self.logger.log_image(adv_img, 'init_adv_{}.png'.format(idx))
 
-        self.logger.end()
-        print(std_loss.avg, std_corr.avg, adv_loss.avg, adv_corr.avg)
+        # self.logger.end()
+        return std_loss.avg, std_corr.avg, adv_loss.avg, adv_corr.avg
 
 class CIFAR10Evaluator(BaseEvaluator):
     def _init_loaders(self):

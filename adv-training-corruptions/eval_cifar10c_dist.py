@@ -89,6 +89,32 @@ def main():
     
     plt.rcParams["figure.figsize"] = (30,10)
 
+    def pi_analyze(pi, dist, fname):
+        try:
+            os.mkdir("pi_analyze/")
+        except:
+            pass
+        X = int(pi.shape[0] ** (1/2))
+        tmp_cnt = [0 for i in range(2 * X)]
+        thresh_val = 0
+
+        for k1 in range(pi.shape[0]):
+            for k2 in range(pi.shape[1]):
+                if k1 == k2:
+                    continue
+                i1 = k1 // X
+                j1 = k1 % X
+                i2 = k2 // X
+                j2 = k2 % X 
+                tmp_cnt[abs(i1 - i2) + abs(j1 - j2)] += pi[k1, k2]
+                if abs(i1 - i2) + abs(j1 - j2) > 10:
+                    thresh_val += pi[k1, k2]
+                        
+        plt.bar(range(len(tmp_cnt)), tmp_cnt)
+        plt.title("Wass dist: {:.6f}, More than 10: {:02.4f}%".format(dist.mean().item(), 100 * thresh_val / dist.mean().item()))
+        plt.savefig("pi_analyze/{}.png".format(fname))
+        plt.close()
+
     for corr in corruptions:
         for i in range(1,6):
             x_corr, y_corr = load_cifar10c(n_examples=args.n_samples, severity=i, corruptions=(corr,), data_dir=args.data_dir)
@@ -144,6 +170,8 @@ def main():
             #     mean_l1 += dist_l1.sum()
             #     mean_diff += (dist - dist_l1).abs().sum()
 
+            mean_pi = np.zeros(1)
+
             for data in dataloader:
                 for c in range(3):
                     cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
@@ -154,7 +182,14 @@ def main():
                     M = torch.load("cmats/l2.pt").numpy()
 
                     #dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
-                    dist = ot.emd2(cln_x, corr_x, M)
+                    #dist = ot.emd2(cln_x, corr_x, M)
+                    pi = ot.emd(cln_x, corr_x, M)
+                    dist = np.sum(M * pi)
+
+                    if mean_pi.shape != pi.shape:
+                        mean_pi = pi
+                    else :
+                        mean_pi += pi
                     
                     #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
                     #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
@@ -162,8 +197,10 @@ def main():
                     #print(dist)
                     #exit()
                     mean_dist += dist
+            
+            pi_analyze(mean_pi / (args.n_samples * 3), mean_dist / (args.n_samples * 3), "{}_{}".format(corr, i))
 
-            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
+            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / (args.n_samples * 3), acc_corr))
 
 
     # if args.only_clean:

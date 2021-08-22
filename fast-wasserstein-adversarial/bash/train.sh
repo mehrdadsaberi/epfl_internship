@@ -12,7 +12,7 @@
 dataset=cifar
 batch=128
 lr=0.1
-epoch=30
+epoch=150
 
 attack=frank
 eps=0.5

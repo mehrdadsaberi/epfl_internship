@@ -16,3 +16,4 @@ fast-wasserstein-adversarial/data/*
 *.tar.gz
 advex-uar/advex_uar/cifar-10-batches-py/*
 advex-uar/advex_uar/wandb/*
+*.out

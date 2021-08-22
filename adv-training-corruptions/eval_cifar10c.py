@@ -57,6 +57,7 @@ def main():
                  ["Wass 0.005", "models/cifar_frank_eps-0.005_epoch-30.pth", "dict", None],
                  ["Wass 0.001", "models/cifar_frank_eps-0.001_epoch-30.pth", "dict", None],
                  ["Wass 0.001 (60ep)", "models/cifar_frank_eps-0.001_epoch-60-c.pth", "dict", None],
+                 ["Wass 0.001 (150ep)", "models/cifar_frank_eps-0.001_epoch-150.pth", "dict", None],
                  ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
                  ["Wass 0.0005", "models/cifar_frank_eps-0.0005_epoch-30.pth", "dict", None],
                  ["Wass 0.0001", "models/cifar_frank_eps-0.0001_epoch-30.pth", "dict", None],
