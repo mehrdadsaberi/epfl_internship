@@ -112,11 +112,19 @@ def run(**flag_kwargs):
         out_f.flush()
         print(out_s)
 
+    mean_all = 0
+
     for attack_name in sum_acc.keys():
         out_s = "{} | uar: {:.4f}".format(attack_name, sum_acc[attack_name] / sum_ata[attack_name])
         out_f.write(out_s + "\n")
         out_f.flush()
         print(out_s)
+        mean_all += sum_acc[attack_name] / sum_ata[attack_name]
+    
+    
+    out_s = "Average | uar: {:.4f}".format(mean_all / len(sum_acc.keys()))
+    out_f.write(out_s + "\n")
+    out_f.flush()
     
     out_f.close()
 

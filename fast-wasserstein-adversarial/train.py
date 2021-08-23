@@ -15,7 +15,7 @@ import os
 import setGPU
 
 
-def train(model, loader, device, lr, epoch, attacker, args, testloader):
+def train(model, loader, device, lr, epoch, attacker, args, testloader, normalize):
 
     # lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
     def lr_schedule(t):
@@ -65,7 +65,7 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader):
 
             scores = model(adv_data)
             loss = loss_fn(scores, target)
-            cln_scores = model(cln_data)
+            cln_scores = model(normalize(cln_data))
             cln_loss = loss_fn(cln_scores, target)
             loss.backward()
 
@@ -91,7 +91,7 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader):
         for batch_idx, (cln_data, target) in enumerate(testloader):
             test_data, target = cln_data.to(device), target.to(device)
 
-            test_scores = model(test_data)
+            test_scores = model(normalize(test_data))
             test_loss = loss_fn(test_scores, target)
             
             cur_test_correct = test_scores.max(dim=1)[1].eq(target).sum().item()
@@ -179,7 +179,7 @@ if __name__ == "__main__":
     else:
         assert 0
 
-    train(net, trainloader, device, args.lr, args.epoch, attacker, args, testloader)
+    train(net, trainloader, device, args.lr, args.epoch, attacker, args, testloader, normalize)
 
     #ckpt = {'model_state_dict': net.state_dict()}
 
