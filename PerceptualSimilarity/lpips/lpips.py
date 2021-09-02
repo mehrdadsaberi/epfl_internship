@@ -47,9 +47,12 @@ class LPIPS(nn.Module):
         elif(self.pnet_type=='squeeze'):
             net_type = pn.squeezenet
             self.chns = [64,128,256,384,384,512,512]
+        elif(self.pnet_type=='resnet'):
+            net_type = pn.resnet
+            self.chns = [64,128,256,512]
         self.L = len(self.chns)
 
-        self.net = net_type(pretrained=not self.pnet_rand, requires_grad=self.pnet_tune)
+        self.net = net_type(pretrained=not self.pnet_rand, requires_grad=self.pnet_tune).cuda()
 
         if(lpips):
             self.lin0 = NetLinLayer(self.chns[0], use_dropout=use_dropout)
@@ -64,6 +67,10 @@ class LPIPS(nn.Module):
                 self.lins+=[self.lin5,self.lin6]
             self.lins = nn.ModuleList(self.lins)
 
+            # for name, param in self.lins[0].named_parameters():
+            #     print(name, param.data.shape, param.data)
+            
+
             if(pretrained):
                 if(model_path is None):
                     import inspect
@@ -72,7 +79,17 @@ class LPIPS(nn.Module):
 
                 if(verbose):
                     print('Loading model from: %s'%model_path)
-                self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False)          
+                self.load_state_dict(torch.load(model_path, map_location='cpu'), strict=False) 
+
+                # tmp = torch.load(model_path, map_location='cpu')
+                # for x in tmp:
+                #     print(x)
+                # exit()
+
+                
+                # for name, param in self.lins[0].named_parameters():
+                #     print(name, param.data.shape, param.data) 
+                # exit()
 
         if(eval_mode):
             self.eval()
@@ -85,11 +102,17 @@ class LPIPS(nn.Module):
         # v0.0 - original release had a bug, where input was not scaled
         in0_input, in1_input = (self.scaling_layer(in0), self.scaling_layer(in1)) if self.version=='0.1' else (in0, in1)
         outs0, outs1 = self.net.forward(in0_input), self.net.forward(in1_input)
+        #print(len(outs0))
+        #for x in outs0:
+        #    print(x.shape)
+        #exit()
         feats0, feats1, diffs = {}, {}, {}
 
         for kk in range(self.L):
             feats0[kk], feats1[kk] = lpips.normalize_tensor(outs0[kk]), lpips.normalize_tensor(outs1[kk])
             diffs[kk] = (feats0[kk]-feats1[kk])**2
+            # if kk != 0:
+            #     diffs[kk] = torch.zeros_like(diffs[kk])
 
         if(self.lpips):
             if(self.spatial):
@@ -105,6 +128,7 @@ class LPIPS(nn.Module):
         val = res[0]
         for l in range(1,self.L):
             val += res[l]
+
 
         # a = spatial_average(self.lins[kk](diffs[kk]), keepdim=True)
         # b = torch.max(self.lins[kk](feats0[kk]**2))
@@ -137,8 +161,13 @@ class NetLinLayer(nn.Module):
     def __init__(self, chn_in, chn_out=1, use_dropout=False):
         super(NetLinLayer, self).__init__()
 
+        chn_mid = 512
+
         layers = [nn.Dropout(),] if(use_dropout) else []
-        layers += [nn.Conv2d(chn_in, chn_out, 1, stride=1, padding=0, bias=False),]
+        layers += [nn.Conv2d(chn_in, chn_mid, 1, stride=1, padding=0, bias=False),]
+        layers += [nn.LeakyReLU(0.2,True),]
+        layers += [nn.Conv2d(chn_mid, chn_out, 1, stride=1, padding=0, bias=False),]
+        # layers += [nn.Conv2d(chn_in, chn_out, 1, stride=1, padding=0, bias=False),]
         self.model = nn.Sequential(*layers)
 
     def forward(self, x):

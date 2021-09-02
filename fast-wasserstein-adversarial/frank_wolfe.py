@@ -9,6 +9,9 @@ from wasserstein_attack import WassersteinAttack
 from lmo import entr_support_func
 from projection import dual_capacity_constrained_projection
 
+import os
+import matplotlib.pyplot as plt
+
 
 class FrankWolfe(WassersteinAttack):
 
@@ -36,7 +39,36 @@ class FrankWolfe(WassersteinAttack):
 
         self.inf = 1000000
 
+    # def pi_analyze(self, pi, dist, fname):
+    #     try:
+    #         os.mkdir("pi_analyze/")
+    #     except:
+    #         pass
+    #     X = int(pi.shape[0] ** (1/2))
+    #     tmp_cnt = [0 for i in range(2 * X)]
+    #     thresh_val = 0
+
+    #     for k1 in range(pi.shape[0]):
+    #         for k2 in range(pi.shape[1]):
+    #             if k1 == k2:
+    #                 continue
+    #             i1 = k1 // X
+    #             j1 = k1 % X
+    #             i2 = k2 // X
+    #             j2 = k2 % X 
+    #             tmp_cnt[abs(i1 - i2) + abs(j1 - j2)] += pi[k1, k2]
+    #             if abs(i1 - i2) + abs(j1 - j2) > 10:
+    #                 thresh_val += pi[k1, k2]
+                        
+    #     plt.bar(range(len(tmp_cnt)), tmp_cnt)
+    #     plt.title("Wass dist: {:.6f}, More than 10: {:02.4f}%".format(dist.mean().item(), 100 * thresh_val / dist.mean().item()))
+    #     plt.savefig("pi_analyze/{}.png".format(fname))
+    #     plt.close()
+
     def perturb(self, X, y):
+        
+        # plt.rcParams["figure.figsize"] = (30,10)
+        
         batch_size, c, h, w = X.size()
 
         self.initialize_cost(X, inf=self.inf)
@@ -97,6 +129,8 @@ class FrankWolfe(WassersteinAttack):
                 self.check_transport_cost(pi / normalization, tol=1e-3, verbose=False)
 
         with torch.no_grad():
+            #self.pi_analyze((pi / normalization).sum(dim=1).mean(dim=0), (self.cost * (pi / normalization)).sum(dim=(1, 2, 3)) , "000")
+            #exit()
             adv_example = self.coupling2adversarial(pi, X)
             check_hypercube(adv_example, verbose=self.verbose)
             self.check_nonnegativity(pi / normalization, tol=1e-4, verbose=self.verbose)

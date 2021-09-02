@@ -18,7 +18,7 @@ attack=frank
 eps=0.5
 nb_iter=30
 
-resume=45
+resume=0
 save_model_loc=checkpoints/cifar_frank_eps-0.5_epoch-45.pth
 
 python train.py --dataset $dataset \

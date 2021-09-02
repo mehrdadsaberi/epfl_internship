@@ -174,7 +174,7 @@ class resnet(torch.nn.Module):
         h = self.layer4(h)
         h_conv5 = h
 
-        outputs = namedtuple("Outputs", ['relu1','conv2','conv3','conv4','conv5'])
-        out = outputs(h_relu1, h_conv2, h_conv3, h_conv4, h_conv5)
+        outputs = namedtuple("Outputs", ['conv2','conv3','conv4','conv5'])
+        out = outputs(h_conv2, h_conv3, h_conv4, h_conv5)
 
         return out

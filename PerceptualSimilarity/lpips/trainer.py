@@ -77,7 +77,9 @@ class Trainer():
             self.parameters += list(self.rankLoss.net.parameters())
             self.lr = lr
             self.old_lr = lr
-            self.optimizer_net = torch.optim.Adam(self.parameters, lr=lr, betas=(beta1, 0.999))
+            # self.optimizer_net = torch.optim.Adam(self.parameters, lr=lr, betas=(beta1, 0.999))
+            self.optimizer_net = torch.optim.SGD(self.parameters, lr, momentum=0.9, weight_decay=5e-4)
+
         else: # test mode
             self.net.eval()
 
@@ -205,6 +207,9 @@ class Trainer():
         print('update lr [%s] decay: %f -> %f' % (type,self.old_lr, lr))
         self.old_lr = lr
 
+    def update_cyclic_learning_rate(self, cur_lr):
+        for param_group in self.optimizer_net.param_groups:
+            param_group['lr'] = cur_lr
 
     def get_image_paths(self):
         return self.image_paths
@@ -248,20 +253,20 @@ def score_2afc_dataset(data_loader, func, name=''):
 
     i = 0
     for data in tqdm(data_loader.load_data(), desc=name):
-        if i >= 1000:
-            break
+        # if i >= 1000:
+        #     break
         d0 = func(data['ref'],data['p0']).data.cpu().numpy().flatten()
         d1 = func(data['ref'],data['p1']).data.cpu().numpy().flatten()
         gt = data['judge'].cpu().numpy().flatten()
         d0s+=d0.tolist()
         d1s+=d1.tolist()
         gts+=gt.tolist()
-        nd0s = np.array(d0s)
-        nd1s = np.array(d1s)
-        ngts = np.array(gts)
+        # nd0s = np.array(d0s)
+        # nd1s = np.array(d1s)
+        # ngts = np.array(gts)
 
-        scores = (nd0s<nd1s)*(1.-ngts) + (nd1s<nd0s)*ngts + (nd1s==nd0s)*.5
-        print(i, "|", np.mean(scores))
+        # scores = (nd0s<nd1s)*(1.-ngts) + (nd1s<nd0s)*ngts + (nd1s==nd0s)*.5
+        # print(i, "|", np.mean(scores))
         
         # img_ref = data['ref'][0].cpu().numpy() * 0.5 + 0.5
         # img_ref = np.swapaxes(img_ref, 0, 2) 

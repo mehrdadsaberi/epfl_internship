@@ -36,7 +36,7 @@ def make_dataset(dirs, mode='img'):
                 if is_image_file(fname, mode=mode):
                     path = os.path.join(root, fname)
                     images.append(path)
-
+    
     # print("Found %i images in %s"%(len(images),root))
     return images
 

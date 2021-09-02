@@ -25,12 +25,15 @@ class CustomDatasetDataLoader(BaseDataLoader):
         if(not isinstance(datafolders,list)):
             datafolders = [datafolders,]
         data_root_folders = [os.path.join(dataroot,datafolder) for datafolder in datafolders]
+        print("start CreateDataset")
         self.dataset = CreateDataset(data_root_folders,dataset_mode=dataset_mode,load_size=load_size)
+        print("start DataLoader")
         self.dataloader = torch.utils.data.DataLoader(
             self.dataset,
             batch_size=batch_size,
             shuffle=not serial_batches,
             num_workers=int(nThreads))
+        print("end DataLoader")
 
     def load_data(self):
         return self.dataloader

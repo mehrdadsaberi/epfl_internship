@@ -9,6 +9,7 @@ from data import data_loader as dl
 import argparse
 from util.visualizer import Visualizer
 from IPython import embed
+# import setGPU
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--datasets', type=str, nargs='+', default=['train/traditional','train/cnn','train/mix'], help='datasets to train on: [train/traditional],[train/cnn],[train/mix],[val/traditional],[val/cnn],[val/color],[val/deblur],[val/frameinterp],[val/superres]')
@@ -19,8 +20,8 @@ parser.add_argument('--use_gpu', action='store_true', help='turn on flag to use 
 parser.add_argument('--gpu_ids', type=int, nargs='+', default=[0], help='gpus to use')
 
 parser.add_argument('--nThreads', type=int, default=4, help='number of threads to use in data loader')
-parser.add_argument('--nepoch', type=int, default=5, help='# epochs at base learning rate')
-parser.add_argument('--nepoch_decay', type=int, default=5, help='# additional epochs at linearly learning rate')
+parser.add_argument('--nepoch', type=int, default=20, help='# epochs at base learning rate')
+parser.add_argument('--nepoch_decay', type=int, default=0, help='# additional epochs at linearly learning rate')
 parser.add_argument('--display_freq', type=int, default=5000, help='frequency (in instances) of showing training results on screen')
 parser.add_argument('--print_freq', type=int, default=5000, help='frequency (in instances) of showing training results on console')
 parser.add_argument('--save_latest_freq', type=int, default=20000, help='frequency (in instances) of saving the latest results')
@@ -36,23 +37,45 @@ parser.add_argument('--from_scratch', action='store_true', help='model was initi
 parser.add_argument('--train_trunk', action='store_true', help='model trunk was trained/tuned')
 parser.add_argument('--train_plot', action='store_true', help='plot saving')
 
+print("Init")
+
+
 opt = parser.parse_args()
 opt.save_dir = os.path.join(opt.checkpoints_dir,opt.name)
 if(not os.path.exists(opt.save_dir)):
     os.mkdir(opt.save_dir)
+
+# os.environ["CUDA_VISIBLE_DEVICES"] = str(opt.gpu_ids[0])
+
+print("start trainer")
 
 # initialize model
 trainer = lpips.Trainer()
 trainer.initialize(model=opt.model, net=opt.net, use_gpu=opt.use_gpu, is_train=True, 
     pnet_rand=opt.from_scratch, pnet_tune=opt.train_trunk, gpu_ids=opt.gpu_ids)
 
+print("start data loading")
+
 # load data from all training sets
-data_loader = dl.CreateDataLoader(opt.datasets,dataset_mode='2afc', batch_size=opt.batch_size, serial_batches=False, nThreads=opt.nThreads)
+data_loader = dl.CreateDataLoader(opt.datasets,dataroot='./dataset',dataset_mode='2afc', batch_size=opt.batch_size, serial_batches=False, nThreads=opt.nThreads)
+print("created")
 dataset = data_loader.load_data()
+print("data loaded")
 dataset_size = len(data_loader)
 D = len(dataset)
 print('Loading %i instances from'%dataset_size,opt.datasets)
 visualizer = Visualizer(opt)
+
+max_lr = 0.1
+# lr_schedule = lambda t: np.interp([t], [0, (opt.nepoch + opt.nepoch_decay + 1) // 2, (opt.nepoch + opt.nepoch_decay + 1)], [0., max_lr, 0.])[0]
+def lr_schedule(t):
+    if t < 10:
+        return max_lr
+    elif t < 15:
+        return max_lr / 10.
+    else:
+        return max_lr / 100.
+print("Start of training...")
 
 total_steps = 0
 fid = open(os.path.join(opt.checkpoints_dir,opt.name,'train_log.txt'),'w+')
@@ -63,11 +86,14 @@ for epoch in range(1, opt.nepoch + opt.nepoch_decay + 1):
         total_steps += opt.batch_size
         epoch_iter = total_steps - dataset_size * (epoch - 1)
 
+        cur_lr = lr_schedule(epoch - 1 + (i + 1) / len(dataset))
+        trainer.update_cyclic_learning_rate(cur_lr)
+
         trainer.set_input(data)
         trainer.optimize_parameters()
 
-        if total_steps % opt.display_freq == 0:
-            visualizer.display_current_results(trainer.get_current_visuals(), epoch)
+        # if total_steps % opt.display_freq == 0:
+        #     visualizer.display_current_results(trainer.get_current_visuals(), epoch)
 
         if total_steps % opt.print_freq == 0:
             errors = trainer.get_current_errors()
@@ -76,28 +102,28 @@ for epoch in range(1, opt.nepoch + opt.nepoch_decay + 1):
             t2 = t2o*D/(i+.0001)
             visualizer.print_current_errors(epoch, epoch_iter, errors, t, t2=t2, t2o=t2o, fid=fid)
 
-            for key in errors.keys():
-                visualizer.plot_current_errors_save(epoch, float(epoch_iter)/dataset_size, opt, errors, keys=[key,], name=key, to_plot=opt.train_plot)
+            # for key in errors.keys():
+            #     visualizer.plot_current_errors_save(epoch, float(epoch_iter)/dataset_size, opt, errors, keys=[key,], name=key, to_plot=opt.train_plot)
 
-            if opt.display_id > 0:
-                visualizer.plot_current_errors(epoch, float(epoch_iter)/dataset_size, opt, errors)
+            # if opt.display_id > 0:
+            #     visualizer.plot_current_errors(epoch, float(epoch_iter)/dataset_size, opt, errors)
 
-        if total_steps % opt.save_latest_freq == 0:
-            print('saving the latest model (epoch %d, total_steps %d)' %
-                  (epoch, total_steps))
-            trainer.save(opt.save_dir, 'latest')
+        # if total_steps % opt.save_latest_freq == 0:
+        #     print('saving the latest model (epoch %d, total_steps %d)' %
+        #           (epoch, total_steps))
+        #     trainer.save(opt.save_dir, 'latest')
 
     if epoch % opt.save_epoch_freq == 0:
         print('saving the model at the end of epoch %d, iters %d' %
               (epoch, total_steps))
         trainer.save(opt.save_dir, 'latest')
-        trainer.save(opt.save_dir, epoch)
+        # trainer.save(opt.save_dir, epoch)
 
     print('End of epoch %d / %d \t Time Taken: %d sec' %
           (epoch, opt.nepoch + opt.nepoch_decay, time.time() - epoch_start_time))
 
-    if epoch > opt.nepoch:
-        trainer.update_learning_rate(opt.nepoch_decay)
+    # if epoch > opt.nepoch:
+    #     trainer.update_learning_rate(opt.nepoch_decay)
 
 # trainer.save_done(True)
 fid.close()
