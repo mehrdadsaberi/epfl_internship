@@ -563,6 +563,7 @@ class BisectionAttack(nn.Module):
                 self.first_order_step.bound = step_size
             # adv_inputs = self.first_order_step(adv_inputs, labels)
 
+
             adv_inputs.requires_grad = True
             if self.model == self.lpips_model:
                 adv_input_features, adv_orig_logits = self.model.features_logits(adv_inputs)
