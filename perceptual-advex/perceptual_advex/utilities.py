@@ -62,7 +62,7 @@ def add_dataset_model_arguments(parser, include_checkpoint=False):
 
 def get_dataset_model(
     args=None,
-    dataset_path: Optional[str] = None,
+    dataset_path: Optional[str] = './datasets/',
     arch: Optional[str] = None,
     checkpoint_fname: Optional[str] = None,
     **kwargs,
@@ -75,7 +75,7 @@ def get_dataset_model(
 
     if dataset_path is None:
         if args is None:
-            dataset_path = '~/datasets'
+            dataset_path = './datasets/'
         else:
             dataset_path = args.dataset_path
     dataset_path = os.path.expandvars(dataset_path)

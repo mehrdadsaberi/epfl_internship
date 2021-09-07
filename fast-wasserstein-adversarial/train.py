@@ -9,6 +9,7 @@ from model import str2model
 
 from frank_wolfe import FrankWolfe
 from l1wass import L1Wasserstein
+from perceptual_attacks import 
 
 import os
 
@@ -181,7 +182,12 @@ if __name__ == "__main__":
                               device=device,
                               postprocess=False,
                               verbose=False)
-    
+    # elif args.attack == "lpips":
+    #     attacker = L2StepAttack(predict=lambda x: net(normalize(x)),
+    #                           loss=nn.CrossEntropyLoss(reduction="sum"),
+    #                           bound=args.eps,
+    #                           step=args.alpha,
+    #                           )
     else:
         assert 0
 

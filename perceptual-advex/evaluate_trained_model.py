@@ -3,6 +3,7 @@ from typing import Dict, List
 import torch
 import csv
 import argparse
+import setGPU
 
 from perceptual_advex.utilities import add_dataset_model_arguments, \
     get_dataset_model

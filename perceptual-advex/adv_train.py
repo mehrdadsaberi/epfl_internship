@@ -9,6 +9,7 @@ import random
 import os
 from torch import nn
 from tensorboardX import SummaryWriter
+import setGPU
 
 from perceptual_advex import evaluation
 from perceptual_advex.utilities import add_dataset_model_arguments, \
@@ -299,10 +300,11 @@ if __name__ == '__main__':
                        calculate_accuracy(attack_logits, labels).item())
 
         if train:
-            print(f'ITER {iteration:06d}',
-                  f'accuracy: {accuracy.item() * 100:5.1f}%',
-                  f'loss: {loss.item():.2f}',
-                  sep='\t')
+            if (iteration + 1) % 50 == 0:
+                print(f'ITER {iteration:06d}',
+                    f'accuracy: {accuracy.item() * 100:5.1f}%',
+                    f'loss: {loss.item():.2f}',
+                    sep='\t')
 
         # OPTIMIZATION
         if train:

@@ -17,3 +17,4 @@ fast-wasserstein-adversarial/data/*
 advex-uar/advex_uar/cifar-10-batches-py/*
 advex-uar/advex_uar/wandb/*
 *.out
+perceptual-advex/data/*

@@ -187,6 +187,145 @@ class NoProjection(nn.Module):
         return adv_inputs
 
 
+class NewReversedBisectionPerceptualProjection(nn.Module):
+    def __init__(self, bound, lpips_model, num_steps=15):
+        super().__init__()
+
+        self.bound = bound
+        self.lpips_model = lpips_model
+        self.num_steps = num_steps
+
+    def forward(self, inputs, adv_inputs, input_features=None):
+        batch_size = inputs.shape[0]
+        if input_features is None:
+            input_features = normalize_flatten_features(
+                self.lpips_model.features(inputs))
+
+        # lam_min = torch.zeros(batch_size, device=inputs.device)
+        # lam_max = torch.ones(batch_size, device=inputs.device)
+        c = 2
+        lst_lam = torch.zeros(batch_size, device=inputs.device)
+        lam = (1 / (c ** (self.num_steps - 1))) * torch.ones(batch_size, device=inputs.device)
+        final_lam = torch.ones(batch_size, device=inputs.device)
+
+        for _ in range(self.num_steps):
+            projected_adv_inputs = (
+                inputs * lam[:, None, None, None] +
+                adv_inputs * (1 - lam[:, None, None, None])
+            )
+            adv_features = self.lpips_model.features(projected_adv_inputs)
+            adv_features = normalize_flatten_features(adv_features).detach()
+            diff_features = adv_features - input_features
+            norm_diff_features = torch.norm(diff_features, dim=1)
+
+            cond = torch.logical_and(final_lam == 1., norm_diff_features < self.bound)
+
+            final_lam[cond] = lam[cond]
+
+            
+            # if (norm_diff_features > self.bound).sum() > 0:
+            #     print(_)
+            #     print(lam)
+            #     print((norm_diff_features > self.bound))
+            #     print(final_lam)
+            #     input()
+
+            lst_lam = lam.clone()
+            lam *= c
+            if lam.max() > 1:
+                break
+
+        # cnt = 100
+        # for i in range(cnt):
+        #     projected_adv_inputs = (
+        #         inputs * (cnt - i + 1) / cnt +
+        #         adv_inputs * (i + 1) / cnt
+        #     )
+        #     adv_features = self.lpips_model.features(projected_adv_inputs)
+        #     adv_features = normalize_flatten_features(adv_features).detach()
+        #     diff_features = adv_features - input_features
+        #     norm_diff_features = torch.norm(diff_features, dim=1)
+
+        #     print(int((norm_diff_features < self.bound)[0].item()), end="")
+
+        # print()
+        projected_adv_inputs = (
+                inputs * final_lam[:, None, None, None] +
+                adv_inputs * (1 - final_lam[:, None, None, None])
+            )
+        return projected_adv_inputs.detach()
+
+
+class NewBisectionPerceptualProjection(nn.Module):
+    def __init__(self, bound, lpips_model, num_steps=15):
+        super().__init__()
+
+        self.bound = bound
+        self.lpips_model = lpips_model
+        self.num_steps = num_steps
+
+    def forward(self, inputs, adv_inputs, input_features=None):
+        batch_size = inputs.shape[0]
+        if input_features is None:
+            input_features = normalize_flatten_features(
+                self.lpips_model.features(inputs))
+
+        # lam_min = torch.zeros(batch_size, device=inputs.device)
+        # lam_max = torch.ones(batch_size, device=inputs.device)
+        c = 2
+        lst_lam = torch.zeros(batch_size, device=inputs.device)
+        lam = (1 / (c ** (self.num_steps - 1))) * torch.ones(batch_size, device=inputs.device)
+        final_lam = torch.ones(batch_size, device=inputs.device)
+
+        for _ in range(self.num_steps):
+            projected_adv_inputs = (
+                inputs * (1 - lam[:, None, None, None]) +
+                adv_inputs * lam[:, None, None, None]
+            )
+            adv_features = self.lpips_model.features(projected_adv_inputs)
+            adv_features = normalize_flatten_features(adv_features).detach()
+            diff_features = adv_features - input_features
+            norm_diff_features = torch.norm(diff_features, dim=1)
+
+            cond = torch.logical_and(final_lam == 1., norm_diff_features >= self.bound)
+
+            final_lam[cond] = lst_lam[cond]
+
+            
+            # if (norm_diff_features > self.bound).sum() > 0:
+            #     print(_)
+            #     print(lam)
+            #     print((norm_diff_features > self.bound))
+            #     print(final_lam)
+            #     input()
+
+            lst_lam = lam.clone()
+            lam *= c
+            if lam.max() > 1:
+                break
+
+        # cnt = 100
+        # for i in range(cnt):
+        #     projected_adv_inputs = (
+        #         inputs * (cnt - i + 1) / cnt +
+        #         adv_inputs * (i + 1) / cnt
+        #     )
+        #     adv_features = self.lpips_model.features(projected_adv_inputs)
+        #     adv_features = normalize_flatten_features(adv_features).detach()
+        #     diff_features = adv_features - input_features
+        #     norm_diff_features = torch.norm(diff_features, dim=1)
+
+        #     print(int((norm_diff_features < self.bound)[0].item()), end="")
+
+        # print()
+        projected_adv_inputs = (
+                inputs * (1 - final_lam[:, None, None, None]) +
+                adv_inputs * final_lam[:, None, None, None]
+            )
+        return projected_adv_inputs.detach()
+
+
+
 class BisectionPerceptualProjection(nn.Module):
     def __init__(self, bound, lpips_model, num_steps=10):
         super().__init__()
@@ -220,6 +359,26 @@ class BisectionPerceptualProjection(nn.Module):
             lam_min[norm_diff_features <= self.bound] = \
                 lam[norm_diff_features <= self.bound]
             lam = 0.5*(lam_min + lam_max)
+
+        # cnt = 100
+        # for i in range(cnt):
+        #     projected_adv_inputs = (
+        #         inputs * (cnt - i + 1) / cnt +
+        #         adv_inputs * (i + 1) / cnt
+        #     )
+        #     adv_features = self.lpips_model.features(projected_adv_inputs)
+        #     adv_features = normalize_flatten_features(adv_features).detach()
+        #     diff_features = adv_features - input_features
+        #     norm_diff_features = torch.norm(diff_features, dim=1)
+
+        #     print(int((norm_diff_features < self.bound)[0].item()), end="")
+
+        # print()
+
+        projected_adv_inputs = (
+                inputs * (1 - lam_min[:, None, None, None]) +
+                adv_inputs * lam_min[:, None, None, None]
+            )
         return projected_adv_inputs.detach()
 
 
@@ -284,12 +443,129 @@ class NewtonsPerceptualProjection(nn.Module):
         return adv_inputs.detach()
 
 
+
+class DualProjection(nn.Module):
+    def __init__(self, bound, lpips_model, num_iterations=5, h=1e-3):
+        super().__init__()
+
+        self.bound = bound
+        self.num_iterations = num_iterations
+        self.lpips_model = lpips_model
+        self.h = h
+
+
+    def _multiply_matrix(self, v):
+        """
+        If (D phi) is the Jacobian of the features function for the model
+        at inputs, then approximately calculates
+            (D phi)T (D phi) v
+        """
+
+        self.inputs.grad.data.zero_()
+
+        with torch.no_grad():
+            v_features = self.lpips_model.features(self.inputs.detach() +
+                                                   self.h * v)
+            D_phi_v = (
+                normalize_flatten_features(v_features) -
+                self.input_features
+            ) / self.h
+
+        torch.sum(self.input_features * D_phi_v).backward(retain_graph=True)
+
+        return self.inputs.grad.data.clone()
+
+    def forward(self, inputs, adv_inputs, inputs_features=None):
+        self.inputs = inputs
+
+        inputs.requires_grad = True
+        input_features = self.lpips_model.features(inputs)
+        self.input_features = normalize_flatten_features(input_features)
+
+        torch.sum(inputs).backward(retain_graph=True)
+
+        inputs_grad = inputs.grad.data.clone()
+        # if inputs_grad.abs().max() < 1e-4:
+        #     return inputs
+
+        # Variable names are from
+        # https://en.wikipedia.org/wiki/Conjugate_gradient_method#The_resulting_algorithm
+        x = torch.zeros_like(inputs)
+        r = (adv_inputs - inputs) - self._multiply_matrix(x)
+        p = r
+
+        for cg_iter in range(self.num_iterations):
+            r_last = r
+            p_last = p
+            x_last = x
+            del r, p, x
+
+            r_T_r = (r_last ** 2).sum(dim=[1, 2, 3])
+            if r_T_r.max() < 1e-1 and cg_iter > 0:
+                # If the residual is small enough, just stop the algorithm.
+                x = x_last
+                break
+
+            A_p_last = self._multiply_matrix(p_last)
+
+            # print('|r|^2 =', ' '.join(f'{z:.2f}' for z in r_T_r))
+            alpha = (
+                r_T_r /
+                (p_last * A_p_last).sum(dim=[1, 2, 3])
+            )[:, None, None, None]
+            x = x_last + alpha * p_last
+
+            # These calculations aren't necessary on the last iteration.
+            if cg_iter < self.num_iterations - 1:
+                r = r_last - alpha * A_p_last
+
+                beta = (
+                    (r ** 2).sum(dim=[1, 2, 3]) /
+                    r_T_r
+                )[:, None, None, None]
+                p = r + beta * p_last
+
+        x_features = self.lpips_model.features(self.inputs.detach() +
+                                               self.h * x)
+        D_phi_x = (
+            normalize_flatten_features(x_features) -
+            self.input_features
+        ) / self.h
+
+        lam = (self.bound / D_phi_x.norm(dim=1))[:, None, None, None]
+
+        # inputs_grad_norm = inputs_grad.reshape(
+        #     inputs_grad.size()[0], -1).norm(dim=1)
+        # # If the grad is basically 0, don't perturb that input. It's likely
+        # # already misclassified, and trying to perturb it further leads to
+        # # numerical instability.
+        # lam[inputs_grad_norm < 1e-4] = 0
+        # x[inputs_grad_norm < 1e-4] = 0
+
+        # print('LPIPS', self.lpips_distance(
+        #    inputs,
+        #    inputs + lam * x,
+        # ))
+
+        # adv_inputs = (inputs + lam * x).detach()
+
+        # adv_features = self.lpips_model.features(adv_inputs)
+        # adv_features = normalize_flatten_features(adv_features).detach()
+        # norm_diff_features = torch.norm(adv_features - self.input_features, dim=1)
+
+        # print("MEAN:", norm_diff_features.mean().item(), "MAX:", norm_diff_features.max().item())
+
+        return (inputs + lam * x).clamp(0, 1).detach()
+
+
 PROJECTIONS = {
     'none': NoProjection,
     'linesearch': BisectionPerceptualProjection,
     'bisection': BisectionPerceptualProjection,
+    'newbisection': NewBisectionPerceptualProjection,
     'gradient': NewtonsPerceptualProjection,
     'newtons': NewtonsPerceptualProjection,
+    'dual': DualProjection
 }
 
 
@@ -421,6 +697,14 @@ class FirstOrderStepPerceptualAttack(nn.Module):
         #    inputs + lam * x,
         # ))
 
+        # adv_inputs = (inputs + lam * x).detach()
+
+        # adv_features = self.lpips_model.features(adv_inputs)
+        # adv_features = normalize_flatten_features(adv_features).detach()
+        # norm_diff_features = torch.norm(adv_features - self.input_features, dim=1)
+
+        # print("END:", norm_diff_features.max().item())
+
         return (inputs + lam * x).clamp(0, 1).detach()
 
 
@@ -429,7 +713,7 @@ class PerceptualPGDAttack(nn.Module):
                  cg_iterations=5, h=1e-3, lpips_model='self',
                  decay_step_size=False, kappa=1,
                  projection='newtons', randomize=False,
-                 random_targets=False, num_classes=None,
+                 random_targets=False, num_classes=None, new_bisection=False, random_start=False,
                  include_image_as_activation=False):
         """
         Iterated version of the conjugate gradient attack.
@@ -453,6 +737,10 @@ class PerceptualPGDAttack(nn.Module):
         self.step = step
         self.random_targets = random_targets
         self.num_classes = num_classes
+        self.new_bisection = new_bisection
+        self.random_start = random_start
+        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        self.projection_type = projection
 
         if self.step is None:
             if self.decay_step_size:
@@ -467,6 +755,10 @@ class PerceptualPGDAttack(nn.Module):
             include_image_as_activation=include_image_as_activation,
             targeted=self.random_targets)
         self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
+        self.new_projection = NewBisectionPerceptualProjection(self.bound, self.lpips_model)
+        self.rev_projection = NewReversedBisectionPerceptualProjection(self.bound, self.lpips_model)
+        self.normal_projection = BisectionPerceptualProjection(self.bound, self.lpips_model)
+        self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
 
     def _attack(self, inputs, labels):
         with torch.no_grad():
@@ -474,119 +766,84 @@ class PerceptualPGDAttack(nn.Module):
                 self.lpips_model.features(inputs))
 
         start_perturbations = torch.zeros_like(inputs)
-        start_perturbations.normal_(0, 0.01)
+        start_perturbations.normal_(0, 0.0001)
+        if self.random_start:
+            start_perturbations.normal_(0, 0.01)
         adv_inputs = inputs + start_perturbations
         for attack_iter in range(self.num_iterations):
             if self.decay_step_size:
                 step_size = self.step * \
                     0.1 ** (attack_iter / self.num_iterations)
                 self.first_order_step.bound = step_size
-            adv_inputs = self.first_order_step(adv_inputs, labels)
-            adv_inputs = self.projection(inputs, adv_inputs, input_features)
 
-        # print('LPIPS', self.first_order_step.lpips_distance(
-        #    inputs,
-        #    adv_inputs,
-        # ))
+            if self.new_bisection:
+                old_adv_inputs = adv_inputs.clone()
+                adv_inputs = self.first_order_step(adv_inputs, labels).detach()
+                adv_inputs_all = []
+                adv_inputs_all += [self.rev_projection(old_adv_inputs, adv_inputs, input_features)]
+                adv_inputs_all += [self.rev_projection(inputs, adv_inputs, input_features)]
+                adv_inputs_all += [self.new_projection(old_adv_inputs, adv_inputs, input_features)]
+                adv_inputs_all += [self.normal_projection(inputs, adv_inputs, input_features)]
+                adv_inputs_all += [self.normal_projection(old_adv_inputs, adv_inputs, input_features)]
+                adv_inputs_all += [self.newton_projection(inputs, adv_inputs, input_features)]
 
-        return adv_inputs
+                adv_inputs = torch.zeros(adv_inputs.size(), device=adv_inputs.device)
 
-    def forward(self, inputs, labels):
-        if self.random_targets:
-            return utilities.run_attack_with_random_targets(
-                self._attack,
-                self.model,
-                inputs,
-                labels,
-                self.num_classes,
-            )
-        else:
-            return self._attack(inputs, labels)
+                max_loss = -1e6 * torch.ones(inputs.shape[0], device=inputs.device)
+                losses = []
+                cnt_max = []
 
-class BisectionAttack(nn.Module):
-    def __init__(self, model, bound=0.5, step=0.01, num_iterations=5, lpips_model='self',
-                 decay_step_size=False, kappa=1, projection_iters=10,
-                 projection='bisection', randomize=False,
-                 random_targets=False, num_classes=None,
-                 include_image_as_activation=False):
-        """
-        Iterated version of the conjugate gradient attack.
+                for cur_adv_inputs in adv_inputs_all:
+                    adv_logits = self.model(cur_adv_inputs.clone()).detach()
 
-        step_size is the step size in LPIPS distance.
-        num_iterations is the number of steps to take.
-        cg_iterations is the conjugate gradient iterations per step.
-        h is the step size to use for finite-difference calculation.
-        project is whether or not to project the perturbation into the LPIPS
-            ball after each step.
-        """
+                    loss = self.loss(adv_logits, labels).detach()
+                    losses += [loss]
 
-        super().__init__()
+                    adv_inputs[loss > max_loss] = cur_adv_inputs[loss > max_loss]
+                    max_loss = torch.max(loss, max_loss)
 
-        assert randomize is False
-
-        self.model = model
-        self.bound = bound
-        self.num_iterations = num_iterations
-        self.decay_step_size = decay_step_size
-        self.step = step
-        self.random_targets = random_targets
-        self.num_classes = num_classes
-        self.projection_iters = projection_iters
-
-        # if self.step is None:
-        #     if self.decay_step_size:
-        #         self.step = self.bound
-        #     else:
-        #         self.step = 2 * self.bound / self.num_iterations
-
-        self.lpips_model = get_lpips_model(lpips_model, model)
-        # self.first_order_step = FirstOrderStepPerceptualAttack(
-        #     model, bound=self.step, num_iterations=cg_iterations, h=h,
-        #     kappa=kappa, lpips_model=self.lpips_model,
-        #     include_image_as_activation=include_image_as_activation,
-        #     targeted=self.random_targets)
-        self.projection = PROJECTIONS[projection](self.bound, self.lpips_model, num_steps=self.projection_iters)
-        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
-
-    def _attack(self, inputs, labels):
-        with torch.no_grad():
-            input_features = normalize_flatten_features(
-                self.lpips_model.features(inputs))
-
-        start_perturbations = torch.zeros_like(inputs)
-        start_perturbations.normal_(0, 0.01)
-        adv_inputs = inputs + start_perturbations
-        for attack_iter in range(self.num_iterations):
-            if self.decay_step_size:
-                step_size = self.step * \
-                    0.1 ** (attack_iter / self.num_iterations)
-                self.first_order_step.bound = step_size
-            # adv_inputs = self.first_order_step(adv_inputs, labels)
+                adv_inputs = adv_inputs.clone()
+                
+                if max_loss.min() == -1e6:
+                    print("NO")
+                    exit()
+                
+                for i, cur_adv_inputs in enumerate(adv_inputs_all):
+                    loss = losses[i]
+                    cnt_max += [(loss == max_loss).sum().item()]
+                
+                print(cnt_max)
+                # print("avg loss:", max_loss.mean().item())
 
 
-            adv_inputs.requires_grad = True
-            if self.model == self.lpips_model:
-                adv_input_features, adv_orig_logits = self.model.features_logits(adv_inputs)
+                # adv_inputs = self.projection(old_adv_inputs, adv_inputs, input_features)
+            elif self.projection_type == 'dual':
+                adv_inputs = self.first_order_step(adv_inputs, labels)
+                adv_inputs = self.projection(inputs, adv_inputs, input_features)
+                adv_inputs = self.newton_projection(inputs, adv_inputs, input_features)
             else:
-                adv_input_features = self.lpips_model.features(adv_inputs)
-                adv_orig_logits = self.model(adv_inputs)
-
-            loss = self.loss(adv_orig_logits, labels)
-            loss.sum().backward()
-
-            grad = adv_inputs.grad.data.clone()
+                adv_inputs = self.first_order_step(adv_inputs, labels)
+                adv_inputs = self.projection(inputs, adv_inputs, input_features)
             
-            grad_norm = torch.norm(grad,dim=(1,2,3),keepdim=True)
-            scaled_grad = grad/(grad_norm + 1e-10)
-            new_adv_inputs = (adv_inputs + scaled_grad * self.step)
-            adv_inputs = self.projection(adv_inputs, new_adv_inputs, adv_input_features)
+            
+            # adv_input_features = self.lpips_model.features(adv_inputs)
+            # adv_input_features = normalize_flatten_features(adv_input_features)
+            # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+            # print("DIST:", norm_diff_features.max().item())
 
-            adv_inputs.grad.zero_()
 
         # print('LPIPS', self.first_order_step.lpips_distance(
         #    inputs,
         #    adv_inputs,
         # ))
+
+        
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
+        # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
+
 
         return adv_inputs
 
@@ -602,6 +859,8 @@ class BisectionAttack(nn.Module):
         else:
             return self._attack(inputs, labels)
 
+    def perturb(self, inputs, labels):
+        return self.forward(inputs, labels)
 
 class LagrangePerceptualAttack(nn.Module):
     def __init__(self, model, bound=0.5, step=None, num_iterations=20,
@@ -751,3 +1010,133 @@ class LagrangePerceptualAttack(nn.Module):
             )
         else:
             return self._attack(inputs, labels)
+
+class L2StepAttack(nn.Module):
+    def __init__(self, model, bound=0.5, step=0.01, num_iterations=5, lpips_model='self',
+                 decay_step_size=False, kappa=1, projection_iters=10,
+                 projection='newtons', randomize=False, random_start=False,
+                 random_targets=False, num_classes=None,
+                 include_image_as_activation=False):
+        """
+        Iterated version of the conjugate gradient attack.
+
+        step_size is the step size in LPIPS distance.
+        num_iterations is the number of steps to take.
+        cg_iterations is the conjugate gradient iterations per step.
+        h is the step size to use for finite-difference calculation.
+        project is whether or not to project the perturbation into the LPIPS
+            ball after each step.
+        """
+
+        super().__init__()
+
+        assert randomize is False
+
+        self.model = model
+        self.bound = bound
+        self.num_iterations = num_iterations
+        self.decay_step_size = decay_step_size
+        self.step = step
+        self.random_targets = random_targets
+        self.num_classes = num_classes
+        self.projection_iters = projection_iters
+        self.random_start = random_start
+        self.projection_type = projection
+
+        # if self.step is None:
+        #     if self.decay_step_size:
+        #         self.step = self.bound
+        #     else:
+        #         self.step = 2 * self.bound / self.num_iterations
+
+        self.lpips_model = get_lpips_model(lpips_model, model)
+        # self.first_order_step = FirstOrderStepPerceptualAttack(
+        #     model, bound=self.step, num_iterations=cg_iterations, h=h,
+        #     kappa=kappa, lpips_model=self.lpips_model,
+        #     include_image_as_activation=include_image_as_activation,
+        #     targeted=self.random_targets)
+        self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
+        self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
+        # self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        self.loss = torch.nn.CrossEntropyLoss()
+
+    def _attack(self, inputs, labels):
+        with torch.no_grad():
+            input_features = normalize_flatten_features(
+                self.lpips_model.features(inputs))
+
+        start_perturbations = torch.zeros_like(inputs)
+        start_perturbations.normal_(0, 0.0001)
+        if self.random_start:
+            start_perturbations.normal_(0, 0.01)
+
+        adv_inputs = inputs + start_perturbations
+        for attack_iter in range(self.num_iterations):
+            if self.decay_step_size:
+                step_size = self.step * \
+                    0.1 ** (attack_iter / self.num_iterations)
+                self.first_order_step.bound = step_size
+            # adv_inputs = self.first_order_step(adv_inputs, labels)
+
+
+            adv_inputs.requires_grad = True
+            if self.model == self.lpips_model:
+                adv_input_features, adv_orig_logits = self.model.features_logits(adv_inputs)
+                adv_input_features = normalize_flatten_features(adv_input_features)
+            else:
+                adv_input_features = self.lpips_model.features(adv_inputs)
+                adv_input_features = normalize_flatten_features(adv_input_features)
+                adv_orig_logits = self.model(adv_inputs)
+
+            # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+            # print("DIST:", norm_diff_features.max())
+
+            loss = self.loss(adv_orig_logits, labels)
+            # loss.sum().backward()
+            loss.backward()
+
+            grad = adv_inputs.grad.data.clone()
+            
+            adv_inputs.grad.zero_()
+            
+            grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
+            scaled_grad = grad/(grad_norm + 1e-10)
+            new_adv_inputs = (adv_inputs + scaled_grad * self.step).detach()
+            # new_adv_inputs = (adv_inputs + torch.sign(grad) * self.step)
+            # adv_inputs = self.projection(adv_inputs, new_adv_inputs, input_features)
+            
+            if self.projection_type == 'dual':
+                adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
+                adv_inputs = self.newton_projection(inputs, new_adv_inputs, input_features)
+            else:
+                adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
+
+
+        # print('LPIPS', self.first_order_step.lpips_distance(
+        #    inputs,
+        #    adv_inputs,
+        # ))
+
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
+        # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
+
+        return adv_inputs
+
+    def forward(self, inputs, labels):
+        if self.random_targets:
+            return utilities.run_attack_with_random_targets(
+                self._attack,
+                self.model,
+                inputs,
+                labels,
+                self.num_classes,
+            )
+        else:
+            return self._attack(inputs, labels)
+
+    def perturb(self, inputs, labels):
+        return self.forward(inputs, labels)
+
