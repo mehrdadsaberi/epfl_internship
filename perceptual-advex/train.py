@@ -115,10 +115,10 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader, normaliz
         lst_keep = 0
         if i > lst_keep:
             try:
-                os.remove("./checkpoints/{}_{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i - lst_keep))
+                os.remove("./checkpoints/{}_{}_eps-{}_epoch-{}_alpha-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i - lst_keep))
             except:
                 pass
-        torch.save(ckpt, "./checkpoints/{}_{}_eps-{}_epoch-{}.pth".format(args.dataset, args.attack, args.eps, i + 1))
+        torch.save(ckpt, "./checkpoints/{}_{}_eps-{}_epoch-{}_alpha-{}.pth".format(args.dataset, args.attack, args.eps, args.alpha, i + 1))
         
 
 
