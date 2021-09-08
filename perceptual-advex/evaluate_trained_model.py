@@ -4,6 +4,7 @@ import torch
 import csv
 import argparse
 import setGPU
+import time
 
 from perceptual_advex.utilities import add_dataset_model_arguments, \
     get_dataset_model
@@ -62,14 +63,16 @@ if __name__ == '__main__':
             labels = labels.cuda()
 
         for attack_name, attack in zip(attack_names, attacks):
+            st_time = time.time()
             adv_inputs = attack(inputs, labels)
+            fnsh_time = time.time()
             with torch.no_grad():
                 adv_logits = model(adv_inputs)
             batch_correct = (adv_logits.argmax(1) == labels).detach()
 
             batch_accuracy = batch_correct.float().mean().item()
             print(f'ATTACK {attack_name}',
-                  f'accuracy = {batch_accuracy * 100:.1f}',
+                  f'accuracy = {batch_accuracy * 100:.1f}', f'time {fnsh_time - st_time}',
                   sep='\t')
             batches_correct[attack_name].append(batch_correct)
 

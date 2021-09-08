@@ -6,6 +6,7 @@ import math
 from torch import nn
 from torch.nn import functional as F
 from typing_extensions import Literal
+import time
 
 from .distances import normalize_flatten_features, LPIPSDistance
 from .utilities import MarginLoss
@@ -395,6 +396,7 @@ class NewtonsPerceptualProjection(nn.Module):
             bound, lpips_model)
 
     def forward(self, inputs, adv_inputs, input_features=None):
+        tt = time.time()
         original_adv_inputs = adv_inputs
         if input_features is None:
             input_features = normalize_flatten_features(
@@ -405,7 +407,12 @@ class NewtonsPerceptualProjection(nn.Module):
 
         needs_projection.requires_grad = False
         iteration = 0
+        
+        print(time.time() - tt)
+
         while needs_projection.sum() > 0 and iteration < self.max_iterations:
+            st_time = time.time()
+            print("iter start", time.time()- tt)
             adv_inputs.requires_grad = True
             adv_features = normalize_flatten_features(
                 self.lpips_model.features(adv_inputs[needs_projection]))
@@ -434,11 +441,19 @@ class NewtonsPerceptualProjection(nn.Module):
                 projection_step_size > 0
             iteration += 1
 
+            fnsh_time = time.time()
+            print(fnsh_time - st_time, time.time() - tt)
+        
+        print(time.time() - tt)
+
         if needs_projection.sum() > 0:
             # If we still haven't projected all inputs after max_iterations,
             # just use the bisection method.
             adv_inputs = self.bisection_projection(
                 inputs, original_adv_inputs, input_features)
+
+        print(iteration)
+        print(time.time() - tt)
 
         return adv_inputs.detach()
 
@@ -822,8 +837,12 @@ class PerceptualPGDAttack(nn.Module):
                 adv_inputs = self.projection(inputs, adv_inputs, input_features)
                 adv_inputs = self.newton_projection(inputs, adv_inputs, input_features)
             else:
+                before_step = time.time()
                 adv_inputs = self.first_order_step(adv_inputs, labels)
+                after_step = time.time()
                 adv_inputs = self.projection(inputs, adv_inputs, input_features)
+                after_proj = time.time()
+                print("step: {} proj: {}".format(after_step - before_step, after_proj - after_step))
             
             
             # adv_input_features = self.lpips_model.features(adv_inputs)
@@ -1057,8 +1076,8 @@ class L2StepAttack(nn.Module):
         #     targeted=self.random_targets)
         self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
         self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
-        # self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
-        self.loss = torch.nn.CrossEntropyLoss()
+        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        # self.loss = torch.nn.CrossEntropyLoss()
 
     def _attack(self, inputs, labels):
         with torch.no_grad():
@@ -1078,6 +1097,9 @@ class L2StepAttack(nn.Module):
                 self.first_order_step.bound = step_size
             # adv_inputs = self.first_order_step(adv_inputs, labels)
 
+            before_step = time.time()
+
+            
 
             adv_inputs.requires_grad = True
             if self.model == self.lpips_model:
@@ -1093,23 +1115,33 @@ class L2StepAttack(nn.Module):
 
             loss = self.loss(adv_orig_logits, labels)
             # loss.sum().backward()
-            loss.backward()
+            # loss.backward()
 
-            grad = adv_inputs.grad.data.clone()
+            grad = torch.autograd.grad(loss.sum(), adv_inputs, create_graph=False)[0]
+            grad = grad.detach()
+            adv_inputs.requires_grad = False
+
+            # grad = adv_inputs.grad.data.clone()
             
-            adv_inputs.grad.zero_()
+            # adv_inputs.grad.zero_()
             
             grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
             scaled_grad = grad/(grad_norm + 1e-10)
             new_adv_inputs = (adv_inputs + scaled_grad * self.step).detach()
             # new_adv_inputs = (adv_inputs + torch.sign(grad) * self.step)
             # adv_inputs = self.projection(adv_inputs, new_adv_inputs, input_features)
+
+            after_step = time.time()
             
             if self.projection_type == 'dual':
                 adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
                 adv_inputs = self.newton_projection(inputs, new_adv_inputs, input_features)
             else:
                 adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
+
+            after_proj = time.time()
+
+            print("step: {}, proj: {}".format(after_step - before_step, after_proj - after_step))
 
 
         # print('LPIPS', self.first_order_step.lpips_distance(

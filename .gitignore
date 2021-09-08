@@ -21,3 +21,5 @@ perceptual-advex/data/*
 perceptual-advex/datasets
 perceptual-advex/datasets/*
 perceptual-advex/datasets/cifar-10-batches-py/*
+pytorch-i-revnet/data/*
+pytorch-i-revnet/checkpoint/*
