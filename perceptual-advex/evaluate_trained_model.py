@@ -28,6 +28,11 @@ if __name__ == '__main__':
                         help='output per-example accuracy')
     parser.add_argument('--output', type=str, help='output CSV')
 
+    
+    # parser.add_argument('--nBlocks', nargs='+', type=int)
+    # parser.add_argument('--nStrides', nargs='+', type=int)
+    # parser.add_argument('--nChannels', nargs='+', type=int)
+
     args = parser.parse_args()
 
     dataset, model = get_dataset_model(args)
@@ -48,7 +53,7 @@ if __name__ == '__main__':
 
     batches_correct: Dict[str, List[torch.Tensor]] = \
         {attack_name: [] for attack_name in attack_names}
-
+    
     for batch_index, (inputs, labels) in enumerate(val_loader):
         print(f'BATCH {batch_index:05d}')
 
@@ -72,9 +77,10 @@ if __name__ == '__main__':
 
             batch_accuracy = batch_correct.float().mean().item()
             print(f'ATTACK {attack_name}',
-                  f'accuracy = {batch_accuracy * 100:.1f}', f'time {fnsh_time - st_time}',
+                  f'accuracy = {batch_accuracy * 100:.1f}', f', time = {fnsh_time - st_time}',
                   sep='\t')
             batches_correct[attack_name].append(batch_correct)
+        exit()
 
     print('OVERALL')
     accuracies = []

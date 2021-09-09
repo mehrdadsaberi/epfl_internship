@@ -7,11 +7,14 @@ from torch import nn
 from torch.nn import functional as F
 from typing_extensions import Literal
 import time
+import numpy as np
 
 from .distances import normalize_flatten_features, LPIPSDistance
 from .utilities import MarginLoss
 from .models import AlexNetFeatureModel, CifarAlexNet, FeatureModel
 from . import utilities
+
+import matplotlib.pyplot as plt
 
 
 _cached_alexnet: Optional[AlexNetFeatureModel] = None
@@ -20,7 +23,7 @@ _cached_alexnet_cifar: Optional[AlexNetFeatureModel] = None
 
 def get_lpips_model(
     lpips_model_spec: Union[
-        Literal['self', 'alexnet', 'alexnet_cifar'],
+        Literal['self', 'alexnet', 'alexnet_cifar', 'revnet'],
         FeatureModel,
     ],
     model: Optional[FeatureModel] = None,
@@ -58,6 +61,11 @@ def get_lpips_model(
                 progress=True,
             )
         lpips_model.load_state_dict(state['model'])
+    elif lpips_model_spec == 'revnet':
+        checkpoint = torch.load("nets/i-revnet-55.t7")
+        start_epoch = checkpoint['epoch']
+        best_acc = checkpoint['acc']
+        lpips_model = checkpoint['model']
     elif isinstance(lpips_model_spec, str):
         raise ValueError(f'Invalid LPIPS model "{lpips_model_spec}"')
     else:
@@ -408,11 +416,11 @@ class NewtonsPerceptualProjection(nn.Module):
         needs_projection.requires_grad = False
         iteration = 0
         
-        print(time.time() - tt)
+        # print(time.time() - tt)
 
         while needs_projection.sum() > 0 and iteration < self.max_iterations:
             st_time = time.time()
-            print("iter start", time.time()- tt)
+            # print("iter start", time.time()- tt)
             adv_inputs.requires_grad = True
             adv_features = normalize_flatten_features(
                 self.lpips_model.features(adv_inputs[needs_projection]))
@@ -442,9 +450,9 @@ class NewtonsPerceptualProjection(nn.Module):
             iteration += 1
 
             fnsh_time = time.time()
-            print(fnsh_time - st_time, time.time() - tt)
+            # print(fnsh_time - st_time, time.time() - tt)
         
-        print(time.time() - tt)
+        # print(time.time() - tt)
 
         if needs_projection.sum() > 0:
             # If we still haven't projected all inputs after max_iterations,
@@ -452,8 +460,8 @@ class NewtonsPerceptualProjection(nn.Module):
             adv_inputs = self.bisection_projection(
                 inputs, original_adv_inputs, input_features)
 
-        print(iteration)
-        print(time.time() - tt)
+        # print(iteration)
+        # print(time.time() - tt)
 
         return adv_inputs.detach()
 
@@ -1141,8 +1149,16 @@ class L2StepAttack(nn.Module):
 
             after_proj = time.time()
 
-            print("step: {}, proj: {}".format(after_step - before_step, after_proj - after_step))
+            # print("step: {}, proj: {}".format(after_step - before_step, after_proj - after_step))
 
+
+        # print(adv_inputs.clamp(0, 1).min(), adv_inputs.clamp(0, 1).max())
+        # print((adv_inputs.clamp(0, 1) - inputs).norm(p=2, dim=(1,2,3)).max().item())
+        # print(adv_inputs.min(), adv_inputs.max())
+        # print((adv_inputs - inputs).norm(p=2, dim=(1,2,3)).max().item())
+        # print(inputs.min(), inputs.max())
+        # print(torch.logical_or(adv_inputs < 0., adv_inputs > 1.).sum(), (adv_inputs > -100.).sum())
+        # exit()
 
         # print('LPIPS', self.first_order_step.lpips_distance(
         #    inputs,
@@ -1155,6 +1171,235 @@ class L2StepAttack(nn.Module):
         # print("Final DIST:", norm_diff_features.max().item())
         # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
+        return adv_inputs
+
+    def forward(self, inputs, labels):
+        if self.random_targets:
+            return utilities.run_attack_with_random_targets(
+                self._attack,
+                self.model,
+                inputs,
+                labels,
+                self.num_classes,
+            )
+        else:
+            return self._attack(inputs, labels)
+
+    def perturb(self, inputs, labels):
+        return self.forward(inputs, labels)
+
+
+
+class RevnetAttack(nn.Module):
+    def __init__(self, model, bound=0.5, step=None, num_iterations=5, lpips_model='revnet',
+                 decay_step_size=False, kappa=1, projection_iters=10,
+                 projection='newtons', randomize=False, random_start=False,
+                 random_targets=False, num_classes=None,
+                 include_image_as_activation=False):
+        """
+        Iterated version of the conjugate gradient attack.
+
+        step_size is the step size in LPIPS distance.
+        num_iterations is the number of steps to take.
+        cg_iterations is the conjugate gradient iterations per step.
+        h is the step size to use for finite-difference calculation.
+        project is whether or not to project the perturbation into the LPIPS
+            ball after each step.
+        """
+
+        super().__init__()
+
+        assert randomize is False
+
+        self.model = model
+        self.bound = bound
+        self.num_iterations = num_iterations
+        self.decay_step_size = decay_step_size
+        self.random_targets = random_targets
+        self.num_classes = num_classes
+        self.projection_iters = projection_iters
+        self.random_start = random_start
+        self.projection_type = projection
+        self.eps = eps = 1e-10
+
+        # if step is None:
+        #     if self.decay_step_size:
+        #         self.step = self.bound
+        #     else:
+        #         self.step = self.bound * 2 / self.num_iterations
+        # else:
+        #     self.step = step
+
+        if step is None:
+            self.step = self.bound / 4.
+        else:
+            self.step = step
+
+
+
+        self.lpips_model = get_lpips_model(lpips_model, model)
+        # self.first_order_step = FirstOrderStepPerceptualAttack(
+        #     model, bound=self.step, num_iterations=cg_iterations, h=h,
+        #     kappa=kappa, lpips_model=self.lpips_model,
+        #     include_image_as_activation=include_image_as_activation,
+        #     targeted=self.random_targets)
+        # self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
+        # self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
+        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        # self.loss = torch.nn.CrossEntropyLoss()
+
+
+
+    def _attack(self, inputs, labels):
+
+        def normalize_features(features):
+            return features / (input_features_norm * 
+                            np.sqrt(input_features.size()[2] * input_features.size()[3]))
+
+                            
+        def denormalize_features(features):
+            return features * (input_features_norm * 
+                            np.sqrt(input_features.size()[2] * input_features.size()[3]))
+
+        with torch.no_grad():
+            input_features = self.lpips_model.forward(inputs)[1]
+            # new_inputs = self.lpips_model.module.inverse(input_features)
+            # print((inputs - new_inputs).norm(p=2, dim=(1,2,3)).max().item())
+            # exit()
+            input_features_norm = torch.sqrt(torch.sum(input_features ** 2, dim=1, keepdim=True)) + self.eps
+            input_features = normalize_features(input_features)
+            # print(input_features.norm(p=2, dim=(1,2,3)).max().item())
+            # print(input_features.size())
+
+        start_perturbations = torch.zeros_like(input_features)
+        start_perturbations.normal_(0, 0.0001)
+        if self.random_start:
+            start_perturbations.normal_(0, 0.01)
+
+        adv_features = input_features + start_perturbations
+        for attack_iter in range(self.num_iterations):
+            if self.decay_step_size:
+                step_size = self.step * \
+                    0.1 ** (attack_iter / self.num_iterations)
+                self.first_order_step.bound = step_size
+            # adv_inputs = self.first_order_step(adv_inputs, labels)
+
+            # chk1 = time.time()
+
+            adv_features.requires_grad = True
+
+            adv_inputs = self.lpips_model.module.inverse(denormalize_features(adv_features))
+
+            # adv_inputs = adv_inputs.clamp(0, 1)
+            # adv_features = self.lpips_model.forward(adv_inputs)[1].detach()
+            # adv_features = adv_features.requires_grad_()
+
+            # adv_features = normalize_features(adv_features)
+            # adv_inputs = self.lpips_model.module.inverse(denormalize_features(adv_features))
+
+            
+            # chk2 = time.time()
+
+            adv_logits = self.model(adv_inputs)
+
+            loss = self.loss(adv_logits, labels)
+
+            # loss.sum().backward()
+            # loss.backward()
+
+            
+            # chk3 = time.time()
+
+            grad = torch.autograd.grad(loss.sum(), adv_features, create_graph=False)[0]
+            grad = grad.detach()
+            adv_features.requires_grad = False
+
+            
+            # chk4 = time.time()
+
+            # grad = adv_inputs.grad.data.clone()
+            
+            # adv_inputs.grad.zero_()
+            
+            grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
+            scaled_grad = grad/(grad_norm + 1e-10)
+            adv_features = (adv_features + scaled_grad * self.step).detach()
+            adv_features = input_features + (adv_features - input_features).renorm(p=2,dim=0,maxnorm=self.bound)
+
+            
+            # chk5 = time.time()
+            # print("NORM:",(adv_features - input_features).norm(p=2, dim=(1,2,3)).max().item())
+
+            # print("inverse: {:.6f}, loss: {:.6f}, grad: {:.6f}, step: {:.6f}".format(chk2 - chk1, chk3 - chk2, chk4 - chk3, chk5 - chk4))
+            
+        tmp = denormalize_features(adv_features)
+        adv_inputs = self.lpips_model.module.inverse(tmp).detach()
+        # print(adv_inputs.min().item(), adv_inputs.max().item())
+
+        adv_inputs = adv_inputs.clamp(0, 1)
+
+        
+        adv_logits = self.model(adv_inputs)
+        loss = self.loss(adv_logits, labels)
+        # print("Final loss:", loss.mean().item())
+
+        # tmp2 = self.lpips_model.forward(adv_inputs)[1].detach()
+        # adv_inputs2 = self.lpips_model.module.inverse(tmp2).detach()
+        # tmp3 = self.lpips_model.forward(adv_inputs2)[1].detach()
+        # print((tmp2 - tmp).norm(p=2, dim=(1,2,3)).max().item())
+        # print((tmp2 - tmp3).norm(p=2, dim=(1,2,3)).max().item())
+        # print((adv_inputs2 - adv_inputs).norm(p=2, dim=(1,2,3)).max().item())
+        # exit()
+        # print((fin_adv_features - tmp).norm(p=2, dim=(1,2,3)).max().item())
+        # print("LPIPS dist:", (adv_features - input_features).norm(p=2, dim=(1,2,3)).max().item(), (adv_features - input_features).norm(p=2, dim=(1,2,3)).mean().item())
+        # print((denormalize_features(adv_features) - denormalize_features(input_features)).norm(p=2, dim=(1,2,3)).max().item())
+        # exit()
+
+
+        # print(adv_inputs.clamp(0, 1).min(), adv_inputs.clamp(0, 1).max())
+        # print((adv_inputs.clamp(0, 1) - inputs).norm(p=2, dim=(1,2,3)).max().item())
+        # print(adv_inputs.min(), adv_inputs.max())
+        # print((adv_inputs - inputs).norm(p=2, dim=(1,2,3)).max().item())
+        # print(torch.logical_or(adv_inputs < 0., adv_inputs > 1.).sum(), (adv_inputs > -100.).sum())
+
+        # fin_adv_features = self.lpips_model.forward(adv_inputs)[1]
+        # # fin_adv_features = normalize_features(fin_adv_features)
+        # print((fin_adv_features - denormalize_features(adv_features)).norm(p=2, dim=(1,2,3)).max().item())
+        # exit()
+
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
+        # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
+
+        # plt.rcParams["figure.figsize"] = (30,10)
+        
+        # for ind in range(len(inputs)):
+        #     if ind >= 10:
+        #         break
+        #     img_clean = inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
+        #     img_adv = adv_inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
+
+        #     fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+
+        #     ax1.imshow(img_clean)
+        #     ax1.axis('off')
+        #     ax1.set_title("Clean Image")
+            
+        #     ax2.imshow(img_adv)
+        #     ax2.axis('off')
+        #     ax2.set_title("Attacked Image, L2 dist: {}".format((img_clean - img_adv).norm(p=2).item()))
+
+        #     # print((img_adv - img_clean).min().item(), (img_adv - img_clean).max().item())
+        #     ax3.imshow((((img_adv - img_clean) * 5. + 1.0) / 2.0).clamp(0, 1))
+        #     ax3.axis('off')
+        #     ax3.set_title("Diff")
+            
+
+        #     plt.savefig("imgs/{:03d}.png".format(ind))
+        #     #plt.show()
+        #     plt.close()
         return adv_inputs
 
     def forward(self, inputs, labels):

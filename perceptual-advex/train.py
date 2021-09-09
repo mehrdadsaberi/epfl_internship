@@ -130,7 +130,7 @@ if __name__ == "__main__":
 
     parser.add_argument('--dataset', default="cifar", type=str)
     parser.add_argument('--batch_size',default=128, type=int)
-    parser.add_argument('--lr', default=0.1, type=float)
+    parser.add_argument('--lr', default=0.2, type=float)
     parser.add_argument('--epoch', default=30, type=int)
 
     parser.add_argument('--attack', default="l1wass", type=str)
@@ -198,6 +198,10 @@ if __name__ == "__main__":
                               num_iterations=args.nb_iter,
                               lpips_model=args.lpips_model,
                               projection='newtons')
+    elif args.attack == "revnet":
+        attacker = RevnetAttack(model=lambda x: net(normalize(x)),
+                              bound=args.eps,
+                              num_iterations=args.nb_iter)
     else:
         assert 0
 

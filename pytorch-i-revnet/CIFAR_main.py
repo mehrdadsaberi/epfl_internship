@@ -124,7 +124,7 @@ def main():
     if args.resume:
         if os.path.isfile(args.resume):
             print("=> loading checkpoint '{}'".format(args.resume))
-            checkpoint = torch.load(args.resume)
+            checkpoint = torch.load(args.checkpoint)
             start_epoch = checkpoint['epoch']
             best_acc = checkpoint['acc']
             model = checkpoint['model']

@@ -126,6 +126,16 @@ def get_dataset_model(
                         raise error
             else:
                 raise error  # type: ignore
+    elif arch == 'revnet':
+        # model = iRevNet(nBlocks=args.nBlocks, nStrides=args.nStrides,
+        #                     nChannels=args.nChannels, nClasses=nClasses,
+        #                     init_ds=args.init_ds, dropout_rate=0.1, affineBN=True,
+        #                     in_shape=in_shape, mult=args.bottleneck_mult)
+        checkpoint = torch.load(args.checkpoint)
+        start_epoch = checkpoint['epoch']
+        best_acc = checkpoint['acc']
+        model = checkpoint['model']
+        return dataset, model
     elif arch == 'trades-wrn':
         model = TradesWideResNet()
         if checkpoint_fname is not None:
