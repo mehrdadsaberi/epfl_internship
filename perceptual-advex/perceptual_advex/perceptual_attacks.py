@@ -62,10 +62,10 @@ def get_lpips_model(
             )
         lpips_model.load_state_dict(state['model'])
     elif lpips_model_spec == 'revnet':
-        checkpoint = torch.load("nets/i-revnet-55.t7")
+        checkpoint = torch.load("nets/i-revnet-25.t7")
         start_epoch = checkpoint['epoch']
         best_acc = checkpoint['acc']
-        lpips_model = checkpoint['model']
+        lpips_model = checkpoint['model'].module
     elif isinstance(lpips_model_spec, str):
         raise ValueError(f'Invalid LPIPS model "{lpips_model_spec}"')
     else:
@@ -835,7 +835,7 @@ class PerceptualPGDAttack(nn.Module):
                     loss = losses[i]
                     cnt_max += [(loss == max_loss).sum().item()]
                 
-                print(cnt_max)
+                # print(cnt_max)
                 # print("avg loss:", max_loss.mean().item())
 
 
@@ -845,12 +845,12 @@ class PerceptualPGDAttack(nn.Module):
                 adv_inputs = self.projection(inputs, adv_inputs, input_features)
                 adv_inputs = self.newton_projection(inputs, adv_inputs, input_features)
             else:
-                before_step = time.time()
+                # before_step = time.time()
                 adv_inputs = self.first_order_step(adv_inputs, labels)
-                after_step = time.time()
+                # after_step = time.time()
                 adv_inputs = self.projection(inputs, adv_inputs, input_features)
-                after_proj = time.time()
-                print("step: {} proj: {}".format(after_step - before_step, after_proj - after_step))
+                # after_proj = time.time()
+                # print("step: {} proj: {}".format(after_step - before_step, after_proj - after_step))
             
             
             # adv_input_features = self.lpips_model.features(adv_inputs)
@@ -865,10 +865,12 @@ class PerceptualPGDAttack(nn.Module):
         # ))
 
         
-        # adv_input_features = self.lpips_model.features(adv_inputs)
-        # adv_input_features = normalize_flatten_features(adv_input_features)
-        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
-        # print("Final DIST:", norm_diff_features.max().item())
+        adv_input_features = self.lpips_model.features(adv_inputs)
+        adv_input_features = normalize_flatten_features(adv_input_features)
+        input_features = self.lpips_model.features(inputs)
+        input_features = normalize_flatten_features(input_features)
+        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        print("Final DIST:", norm_diff_features.max().item())
         # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
 
@@ -1171,6 +1173,15 @@ class L2StepAttack(nn.Module):
         # print("Final DIST:", norm_diff_features.max().item())
         # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
+        plot_images(inputs, adv_inputs)
+
+        adv_input_features = self.lpips_model.features(adv_inputs)
+        adv_input_features = normalize_flatten_features(adv_input_features)
+        input_features = self.lpips_model.features(inputs)
+        input_features = normalize_flatten_features(input_features)
+        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        print("Final DIST:", norm_diff_features.max().item())
+
         return adv_inputs
 
     def forward(self, inputs, labels):
@@ -1187,6 +1198,36 @@ class L2StepAttack(nn.Module):
 
     def perturb(self, inputs, labels):
         return self.forward(inputs, labels)
+
+
+def plot_images(inputs, adv_inputs):
+    plt.rcParams["figure.figsize"] = (30,10)
+    
+    for ind in range(len(inputs)):
+        if ind >= 10:
+            break
+        img_clean = inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
+        img_adv = adv_inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
+
+        fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+
+        ax1.imshow(img_clean)
+        ax1.axis('off')
+        ax1.set_title("Clean Image")
+        
+        ax2.imshow(img_adv)
+        ax2.axis('off')
+        ax2.set_title("Attacked Image, L2 dist: {}".format((img_clean - img_adv).norm(p=2).item()))
+
+        # print((img_adv - img_clean).min().item(), (img_adv - img_clean).max().item())
+        ax3.imshow((((img_adv - img_clean) * 5. + 1.0) / 2.0).clamp(0, 1))
+        ax3.axis('off')
+        ax3.set_title("Diff")
+        
+
+        plt.savefig("imgs/{:03d}.png".format(ind))
+        #plt.show()
+        plt.close()
 
 
 
@@ -1262,7 +1303,7 @@ class RevnetAttack(nn.Module):
                             np.sqrt(input_features.size()[2] * input_features.size()[3]))
 
         with torch.no_grad():
-            input_features = self.lpips_model.forward(inputs)[1]
+            input_features = self.lpips_model.features(inputs)[0]
             # new_inputs = self.lpips_model.module.inverse(input_features)
             # print((inputs - new_inputs).norm(p=2, dim=(1,2,3)).max().item())
             # exit()
@@ -1288,7 +1329,7 @@ class RevnetAttack(nn.Module):
 
             adv_features.requires_grad = True
 
-            adv_inputs = self.lpips_model.module.inverse(denormalize_features(adv_features))
+            adv_inputs = self.lpips_model.inverse(denormalize_features(adv_features))
 
             # adv_inputs = adv_inputs.clamp(0, 1)
             # adv_features = self.lpips_model.forward(adv_inputs)[1].detach()
@@ -1333,14 +1374,14 @@ class RevnetAttack(nn.Module):
             # print("inverse: {:.6f}, loss: {:.6f}, grad: {:.6f}, step: {:.6f}".format(chk2 - chk1, chk3 - chk2, chk4 - chk3, chk5 - chk4))
             
         tmp = denormalize_features(adv_features)
-        adv_inputs = self.lpips_model.module.inverse(tmp).detach()
+        adv_inputs = self.lpips_model.inverse(tmp).detach()
         # print(adv_inputs.min().item(), adv_inputs.max().item())
 
         adv_inputs = adv_inputs.clamp(0, 1)
 
         
-        adv_logits = self.model(adv_inputs)
-        loss = self.loss(adv_logits, labels)
+        # adv_logits = self.model(adv_inputs)
+        # loss = self.loss(adv_logits, labels)
         # print("Final loss:", loss.mean().item())
 
         # tmp2 = self.lpips_model.forward(adv_inputs)[1].detach()
@@ -1373,33 +1414,17 @@ class RevnetAttack(nn.Module):
         # print("Final DIST:", norm_diff_features.max().item())
         # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
-        # plt.rcParams["figure.figsize"] = (30,10)
-        
-        # for ind in range(len(inputs)):
-        #     if ind >= 10:
-        #         break
-        #     img_clean = inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
-        #     img_adv = adv_inputs[ind].cpu().swapaxes(0, 1).swapaxes(1, 2)
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
 
-        #     fig, (ax1, ax2, ax3) = plt.subplots(1,3)
+        plot_images(inputs, adv_inputs)
 
-        #     ax1.imshow(img_clean)
-        #     ax1.axis('off')
-        #     ax1.set_title("Clean Image")
-            
-        #     ax2.imshow(img_adv)
-        #     ax2.axis('off')
-        #     ax2.set_title("Attacked Image, L2 dist: {}".format((img_clean - img_adv).norm(p=2).item()))
+        adv_input_features = adv_features.view(adv_features.size(0), -1)
+        input_features = self.lpips_model.features(inputs)
+        input_features = normalize_flatten_features(input_features)
+        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        print("Final DIST:", norm_diff_features.max().item())
 
-        #     # print((img_adv - img_clean).min().item(), (img_adv - img_clean).max().item())
-        #     ax3.imshow((((img_adv - img_clean) * 5. + 1.0) / 2.0).clamp(0, 1))
-        #     ax3.axis('off')
-        #     ax3.set_title("Diff")
-            
-
-        #     plt.savefig("imgs/{:03d}.png".format(ind))
-        #     #plt.show()
-        #     plt.close()
         return adv_inputs
 
     def forward(self, inputs, labels):

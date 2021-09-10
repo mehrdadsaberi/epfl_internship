@@ -100,7 +100,7 @@ class iRevNet(nn.Module):
         self.stack = self.irevnet_stack(irevnet_block, nChannels, nBlocks,
                                         nStrides, dropout_rate=dropout_rate,
                                         affineBN=affineBN, in_ch=self.in_ch,
-                                        mult=mult)
+                                          mult=mult)
         self.bn1 = nn.BatchNorm2d(nChannels[-1]*2, momentum=0.9)
         self.linear = nn.Linear(nChannels[-1]*2, nClasses)
 
@@ -136,6 +136,9 @@ class iRevNet(nn.Module):
         out = out.view(out.size(0), -1)
         out = self.linear(out)
         return out, out_bij
+    
+    def features(self, x):
+        return (self.forward(x)[1],)
 
     def inverse(self, out_bij):
         """ irevnet inverse """

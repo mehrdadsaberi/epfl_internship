@@ -90,6 +90,8 @@ class iRevNet(nn.Module):
         self.nBlocks = nBlocks
         self.first = True
 
+        print(self.nBlocks)
+
         print('')
         print(' == Building iRevNet %d == ' % (sum(nBlocks) * 3 + 1))
         if not nChannels:
