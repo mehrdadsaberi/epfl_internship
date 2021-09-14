@@ -28,6 +28,8 @@ if __name__ == '__main__':
                         help='output per-example accuracy')
     parser.add_argument('--output', type=str, help='output CSV')
 
+
+
     
     # parser.add_argument('--nBlocks', nargs='+', type=int)
     # parser.add_argument('--nStrides', nargs='+', type=int)
@@ -36,7 +38,29 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     dataset, model = get_dataset_model(args)
-    _, val_loader = dataset.make_loaders(1, args.batch_size, only_val=True)
+    train_loader, val_loader = dataset.make_loaders(1, args.batch_size, only_val=False)
+
+    
+    mu = torch.tensor([0.4914, 0.4822, 0.4465], dtype=torch.float, device="cuda").unsqueeze(-1).unsqueeze(-1)
+    std = torch.tensor([0.2023, 0.1994, 0.2010], dtype=torch.float, device="cuda").unsqueeze(-1).unsqueeze(-1)
+
+    normalize = lambda x: (x - mu) / std
+    unnormalize = lambda x: x * std + mu
+
+    def create_normal(inp_model):
+        class Normal_Model():
+            def __init__(self, inp_model):
+                self.model = inp_model
+            def __call__(self, x):
+                return self.model(normalize(x))
+            def zero_grad(self):
+                self.model.zero_grad()
+            def eval(self):
+                self.model.eval()
+            def forward(self, x):
+                return self.model(normalize(x))
+        return Normal_Model(inp_model)
+
 
     model.eval()
     if torch.cuda.is_available():
@@ -53,8 +77,9 @@ if __name__ == '__main__':
 
     batches_correct: Dict[str, List[torch.Tensor]] = \
         {attack_name: [] for attack_name in attack_names}
+
     
-    for batch_index, (inputs, labels) in enumerate(val_loader):
+    for batch_index, (inputs, labels) in enumerate(train_loader): #val_loader):
         print(f'BATCH {batch_index:05d}')
 
         if (
@@ -72,7 +97,10 @@ if __name__ == '__main__':
             adv_inputs = attack(inputs, labels)
             fnsh_time = time.time()
             with torch.no_grad():
-                adv_logits = model(adv_inputs)
+                if args.arch == "resnet18":
+                    adv_logits = model(normalize(adv_inputs))
+                else :
+                    adv_logits = model(adv_inputs)
             batch_correct = (adv_logits.argmax(1) == labels).detach()
 
             batch_accuracy = batch_correct.float().mean().item()

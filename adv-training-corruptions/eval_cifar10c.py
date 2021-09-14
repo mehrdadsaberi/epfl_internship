@@ -50,23 +50,29 @@ def main():
     mu = torch.tensor([0.485, 0.456, 0.406], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
     std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
 
-    models_info = [["FrankWolfe", "models/cifar_adv_training_attack-frank_eps-0.005.pth", "dict", None],
+    models_info = [["FrankWolfe", "nets/cifar_adv_training_attack-frank_eps-0.005.pth", "dict", None],
 #                ["Wass 0.01", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-30.pth", "dict", None],
 #                ["Wass 0.005", "models/cifar_adv_training_attack-l1wass_eps-0.005_epoch-30.pth", "dict", None],
 #                ["Wass 0.002", "models/cifar_adv_training_attack-l1wass_eps-0.002_epoch-30.pth", "dict", None],
-                 ["Wass 0.005", "models/cifar_frank_eps-0.005_epoch-30.pth", "dict", None],
-                 ["Wass 0.001", "models/cifar_frank_eps-0.001_epoch-30.pth", "dict", None],
-                 ["Wass 0.001 (60ep)", "models/cifar_frank_eps-0.001_epoch-60-c.pth", "dict", None],
-                 ["Wass 0.001 (150ep)", "models/cifar_frank_eps-0.001_epoch-150.pth", "dict", None],
-                 ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
-                 ["Wass 0.0005", "models/cifar_frank_eps-0.0005_epoch-30.pth", "dict", None],
-                 ["Wass 0.0001", "models/cifar_frank_eps-0.0001_epoch-30.pth", "dict", None],
+                #  ["Wass 0.005", "models/cifar_frank_eps-0.005_epoch-30.pth", "dict", None],
+                 ["Wass 0.001", "nets/cifar_frank_eps-0.001_epoch-30.pth", "dict", None],
+                #  ["Wass 0.001 (60ep)", "models/cifar_frank_eps-0.001_epoch-60-c.pth", "dict", None],
+                 ["Wass 0.001 (150ep)", "nets/cifar_frank_eps-0.001_epoch-150.pth", "dict", None],
+                 ["Revnet 0.001", "nets/cifar_revnet_eps-0.001_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet 0.002", "nets/cifar_revnet_eps-0.002_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet 0.004", "nets/cifar_revnet_eps-0.004_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet 0.008", "nets/cifar_revnet_eps-0.008_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet 0.016", "nets/cifar_revnet_eps-0.016_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet nclamp 0.004", "nets/noclamp_cifar_revnet_eps-0.004_alpha-0.01_epoch-30.pth", "dict", None],
+                #  ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
+                #  ["Wass 0.0005", "models/cifar_frank_eps-0.0005_epoch-30.pth", "dict", None],
+                #  ["Wass 0.0001", "models/cifar_frank_eps-0.0001_epoch-30.pth", "dict", None],
 #                ["Wass 0.0008 (a,51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-51.pth", "dict", None],
 #                ["Wass 0.01 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.01_epoch-20.pth", "dict", None],
 #                ["Wass 0.001 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.001_epoch-20.pth", "dict", None],
 #                ["Wass 0.0005 (2)", "models/cifar_adv_training_attack-l1wass_eps-0.0005_epoch-20.pth", "dict", None],
-                ["L2", "models/l2-at-eps=0.1-cifar10.pt", "pre", None],
-                ["Standard", "models/cifar_vanilla.pth", "net", None]]
+                ["L2", "nets/l2-at-eps=0.1-cifar10.pt", "pre", None],
+                ["Standard", "nets/cifar_vanilla.pth", "net", None]]
 
     def print_info(name, elems):
         print("{} \t".format(name.ljust(20)), end="")

@@ -13,6 +13,7 @@ import os
 from .wass_pot import Wasserstein_POT
 from .wass_sinkhorn import Wasserstein_Sinkhorn
 import matplotlib.pyplot as plt
+from .revnet_distance import Revnet_Distance
 
 
 class Trainer():
@@ -63,6 +64,9 @@ class Trainer():
         elif(self.model in ['Wass-Sink','wass-sink']):
             self.net = Wasserstein_Sinkhorn(use_gpu=use_gpu,colorspace=colorspace) # not really a network, only for testing
             self.model_name = 'Wass-Sink'
+        elif(self.model in ['revnet']):
+            self.net = Revnet_Distance(use_gpu=use_gpu,colorspace=colorspace)
+            self.model_name = 'revnet'
         elif(self.model in ['DSSIM','dssim','SSIM','ssim']):
             self.net = lpips.DSSIM(use_gpu=use_gpu,colorspace=colorspace)
             self.model_name = 'SSIM'

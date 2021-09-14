@@ -62,9 +62,10 @@ def get_lpips_model(
             )
         lpips_model.load_state_dict(state['model'])
     elif lpips_model_spec == 'revnet':
-        checkpoint = torch.load("nets/i-revnet-25.t7")
-        start_epoch = checkpoint['epoch']
-        best_acc = checkpoint['acc']
+        checkpoint = torch.load("nets/i-revnet-25-bij.t7")
+        lpips_model = checkpoint['model'].module
+    elif lpips_model_spec == 'i-resnet':
+        checkpoint = torch.load("nets/i-resnet.t7")
         lpips_model = checkpoint['model'].module
     elif isinstance(lpips_model_spec, str):
         raise ValueError(f'Invalid LPIPS model "{lpips_model_spec}"')
@@ -390,6 +391,102 @@ class BisectionPerceptualProjection(nn.Module):
             )
         return projected_adv_inputs.detach()
 
+class InvGDProjection(nn.Module):
+    def __init__(self, bound, lpips_model, max_iterations=100):
+        super().__init__()
+
+        self.bound = bound
+        self.lpips_model = lpips_model
+        self.max_iterations = max_iterations
+        self.eps = 1e-10
+
+    def forward(self, inputs, adv_inputs, input_features=None, input_features_norm=None, adv_features=None):
+
+        def normalize_features(features):
+            return features / (input_features_norm * 
+                            np.sqrt(input_features.size()[2] * input_features.size()[3]))
+                            
+        def denormalize_features(features):
+            return features * (input_features_norm * 
+                            np.sqrt(input_features.size()[2] * input_features.size()[3]))
+
+        if input_features is None:
+            input_features = self.lpips_model.features(inputs)[0]
+            input_features_norm = torch.sqrt(torch.sum(input_features ** 2, dim=1, keepdim=True)) + self.eps
+            input_features = normalize_features(input_features)
+
+        if adv_features is None:
+            adv_features = self.lpips_model.features(adv_inputs)[0]
+            adv_features = normalize_features(adv_features)
+
+        new_adv_features = adv_features.detach()
+
+        if (new_adv_features - input_features).norm(p=2, dim=(1,2,3)).max() <= self.bound:
+            return adv_inputs.detach()
+
+
+        # optimizer = torch.optim.Adam([new_adv_features], lr=0.0001)
+
+        # want to minimize |new_adv_inputs - adv_inputs| while |input_features - new_adv_features| <= bound
+
+        for i in range(self.max_iterations):
+            # projection
+            new_adv_features = input_features + (new_adv_features - input_features).renorm(p=2,dim=0,maxnorm=self.bound)
+            new_adv_features = new_adv_features.detach()
+
+            # gradient step
+
+            new_adv_features.requires_grad = True
+
+            new_adv_inputs = self.lpips_model.inverse(denormalize_features(new_adv_features))
+            # loss = torch.nn.MSELoss()(new_adv_inputs, adv_inputs)
+            
+            # new_adv_features.grad.detach_()
+            # new_adv_features.grad.zero_()
+            loss = (new_adv_inputs - adv_inputs).norm(p=2, dim=(1,2,3)).sum()
+            # loss = (new_adv_inputs - adv_inputs).sum()
+
+            if i == 0:
+                print("init loss:", loss.item(), end=", ")
+            elif i + 1 == self.max_iterations:
+                print("final loss:", loss.item())
+            # print(loss.item())
+            grad = torch.autograd.grad(loss, new_adv_features, create_graph=False)[0]
+            grad = grad.detach()
+            new_adv_features.requires_grad = False
+
+            # print("feature norm:", new_adv_features.norm(p=2, dim=(1,2,3)).mean().item(), end=", ")
+            # print("grad norm:", grad.norm(p=2, dim=(1,2,3)).mean().item())
+
+            if i < self.max_iterations / 8:
+                eta = 1e-5
+            elif i < self.max_iterations * 3 / 8:
+                eta = 1e-6
+            elif i < self.max_iterations * 5 / 8:
+                eta = 1e-7
+            elif i < self.max_iterations * 7 / 8:
+                eta = 1e-8
+            else :
+                eta = 1e-9
+
+
+            # eta = 1e-6 / np.sqrt(i + 1)
+            grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
+            scaled_grad = grad/(grad_norm + 1e-10)
+            new_adv_features = (new_adv_features - scaled_grad * eta).detach()
+            # optimizer.zero_grad()
+            # loss.backward()
+            # optimizer.step()
+
+        new_adv_features = input_features + (new_adv_features - input_features).renorm(p=2,dim=0,maxnorm=self.bound)
+        new_adv_features = new_adv_features.detach()
+        
+        new_adv_inputs = self.lpips_model.inverse(denormalize_features(new_adv_features))
+        
+
+        return new_adv_inputs.detach()
+
+
 
 class NewtonsPerceptualProjection(nn.Module):
     def __init__(self, bound, lpips_model, projection_overshoot=1e-1,
@@ -416,11 +513,11 @@ class NewtonsPerceptualProjection(nn.Module):
         needs_projection.requires_grad = False
         iteration = 0
         
-        # print(time.time() - tt)
+        print(time.time() - tt)
 
         while needs_projection.sum() > 0 and iteration < self.max_iterations:
             st_time = time.time()
-            # print("iter start", time.time()- tt)
+            print("iter start", time.time()- tt)
             adv_inputs.requires_grad = True
             adv_features = normalize_flatten_features(
                 self.lpips_model.features(adv_inputs[needs_projection]))
@@ -588,7 +685,8 @@ PROJECTIONS = {
     'newbisection': NewBisectionPerceptualProjection,
     'gradient': NewtonsPerceptualProjection,
     'newtons': NewtonsPerceptualProjection,
-    'dual': DualProjection
+    'dual': DualProjection,
+    'invgd': InvGDProjection
 }
 
 
@@ -863,15 +961,17 @@ class PerceptualPGDAttack(nn.Module):
         #    inputs,
         #    adv_inputs,
         # ))
+        
+        # plot_images(inputs, adv_inputs, "PPGD")
 
         
-        adv_input_features = self.lpips_model.features(adv_inputs)
-        adv_input_features = normalize_flatten_features(adv_input_features)
-        input_features = self.lpips_model.features(inputs)
-        input_features = normalize_flatten_features(input_features)
-        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
-        print("Final DIST:", norm_diff_features.max().item())
-        # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
+        # input_features = self.lpips_model.features(inputs)
+        # input_features = normalize_flatten_features(input_features)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
+        # # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
 
         return adv_inputs
@@ -1146,6 +1246,9 @@ class L2StepAttack(nn.Module):
             if self.projection_type == 'dual':
                 adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
                 adv_inputs = self.newton_projection(inputs, new_adv_inputs, input_features)
+            elif self.projection_type == 'invgd':
+                adv_inputs = self.projection(inputs, new_adv_inputs)
+                # adv_inputs.clamp(0, 1)
             else:
                 adv_inputs = self.projection(inputs, new_adv_inputs, input_features)
 
@@ -1173,14 +1276,14 @@ class L2StepAttack(nn.Module):
         # print("Final DIST:", norm_diff_features.max().item())
         # print("Min:", adv_inputs.min().item(), "Max:", adv_inputs.max().item())
 
-        plot_images(inputs, adv_inputs)
+        # plot_images(inputs, adv_inputs, "L2Step")
 
-        adv_input_features = self.lpips_model.features(adv_inputs)
-        adv_input_features = normalize_flatten_features(adv_input_features)
-        input_features = self.lpips_model.features(inputs)
-        input_features = normalize_flatten_features(input_features)
-        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
-        print("Final DIST:", norm_diff_features.max().item())
+        # adv_input_features = self.lpips_model.features(adv_inputs)
+        # adv_input_features = normalize_flatten_features(adv_input_features)
+        # input_features = self.lpips_model.features(inputs)
+        # input_features = normalize_flatten_features(input_features)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
 
         return adv_inputs
 
@@ -1200,7 +1303,7 @@ class L2StepAttack(nn.Module):
         return self.forward(inputs, labels)
 
 
-def plot_images(inputs, adv_inputs):
+def plot_images(inputs, adv_inputs, fname):
     plt.rcParams["figure.figsize"] = (30,10)
     
     for ind in range(len(inputs)):
@@ -1225,9 +1328,10 @@ def plot_images(inputs, adv_inputs):
         ax3.set_title("Diff")
         
 
-        plt.savefig("imgs/{:03d}.png".format(ind))
+        plt.savefig("imgs/{}_{:03d}.png".format(fname, ind))
         #plt.show()
         plt.close()
+
 
 
 
@@ -1286,8 +1390,8 @@ class RevnetAttack(nn.Module):
         #     targeted=self.random_targets)
         # self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
         # self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
-        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
-        # self.loss = torch.nn.CrossEntropyLoss()
+        # self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        self.loss = torch.nn.CrossEntropyLoss()
 
 
 
@@ -1364,29 +1468,31 @@ class RevnetAttack(nn.Module):
             
             grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
             scaled_grad = grad/(grad_norm + 1e-10)
-            adv_features = (adv_features + scaled_grad * self.step).detach()
+            adv_features = (adv_features + scaled_grad * self.step)
             adv_features = input_features + (adv_features - input_features).renorm(p=2,dim=0,maxnorm=self.bound)
+            adv_features = adv_features.detach()
 
             
             # chk5 = time.time()
             # print("NORM:",(adv_features - input_features).norm(p=2, dim=(1,2,3)).max().item())
 
             # print("inverse: {:.6f}, loss: {:.6f}, grad: {:.6f}, step: {:.6f}".format(chk2 - chk1, chk3 - chk2, chk4 - chk3, chk5 - chk4))
-            
+
+        
         tmp = denormalize_features(adv_features)
         adv_inputs = self.lpips_model.inverse(tmp).detach()
         # print(adv_inputs.min().item(), adv_inputs.max().item())
 
-        adv_inputs = adv_inputs.clamp(0, 1)
+        # adv_inputs = adv_inputs.clamp(0, 1)
 
         
         # adv_logits = self.model(adv_inputs)
         # loss = self.loss(adv_logits, labels)
         # print("Final loss:", loss.mean().item())
 
-        # tmp2 = self.lpips_model.forward(adv_inputs)[1].detach()
-        # adv_inputs2 = self.lpips_model.module.inverse(tmp2).detach()
-        # tmp3 = self.lpips_model.forward(adv_inputs2)[1].detach()
+        # tmp2 = self.lpips_model.features(adv_inputs)[0].detach()
+        # adv_inputs2 = self.lpips_model.inverse(tmp2).detach()
+        # tmp3 = self.lpips_model.features(adv_inputs2)[0].detach()
         # print((tmp2 - tmp).norm(p=2, dim=(1,2,3)).max().item())
         # print((tmp2 - tmp3).norm(p=2, dim=(1,2,3)).max().item())
         # print((adv_inputs2 - adv_inputs).norm(p=2, dim=(1,2,3)).max().item())
@@ -1417,13 +1523,17 @@ class RevnetAttack(nn.Module):
         # adv_input_features = self.lpips_model.features(adv_inputs)
         # adv_input_features = normalize_flatten_features(adv_input_features)
 
-        plot_images(inputs, adv_inputs)
+        # plot_images(inputs, adv_inputs.clamp(0, 1), "RevnetAttack")
 
-        adv_input_features = adv_features.view(adv_features.size(0), -1)
-        input_features = self.lpips_model.features(inputs)
-        input_features = normalize_flatten_features(input_features)
-        norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
-        print("Final DIST:", norm_diff_features.max().item())
+        # adv_input_features = adv_features.view(adv_features.size(0), -1)
+        # input_features = self.lpips_model.features(inputs)
+        # input_features = normalize_flatten_features(input_features)
+        # adv_features_clamp = self.lpips_model.features(adv_inputs.clamp(0, 1))
+        # adv_features_clamp = normalize_flatten_features(adv_features_clamp)
+        # norm_diff_features = torch.norm(adv_input_features - input_features, dim=1)
+        # print("Final DIST:", norm_diff_features.max().item())
+        # norm_diff_features_clamp = torch.norm(adv_features_clamp - input_features, dim=1)
+        # print("Final DIST (with clamp):", norm_diff_features_clamp.max().item())
 
         return adv_inputs
 

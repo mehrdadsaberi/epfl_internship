@@ -34,7 +34,7 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader, normaliz
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
 
-    for i in range(args.resume, epoch):
+    for i in range(args.resume, epoch + 10):
         correct = 0
         total = 0
         total_loss = 0
@@ -68,7 +68,7 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader, normaliz
 
             optimizer.zero_grad()
 
-            scores = model(adv_data)
+            scores = model(normalize(adv_data))
             loss = loss_fn(scores, target)
             cln_scores = model(normalize(cln_data))
             cln_loss = loss_fn(cln_scores, target)

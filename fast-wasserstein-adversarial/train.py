@@ -9,7 +9,6 @@ from model import str2model
 
 from frank_wolfe import FrankWolfe
 from l1wass import L1Wasserstein
-from perceptual_attacks import 
 
 import os
 
@@ -18,20 +17,19 @@ import setGPU
 
 def train(model, loader, device, lr, epoch, attacker, args, testloader, normalize):
 
-    # lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
-    def lr_schedule(t):
-        if t < 50:
-            return lr
-        elif t < 100:
-            return lr / 10.
-        else:
-            return lr / 100.
+    lr_schedule = lambda t: np.interp([t], [0, epoch // 2, epoch], [0., lr, 0.])[0]
+    # def lr_schedule(t):
+    #     if t < 50:
+    #         return lr
+    #     elif t < 100:
+    #         return lr / 10.
+    #     else:
+    #         return lr / 100.
     loss_fn = nn.CrossEntropyLoss(reduction="mean")
     #optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.9, nesterov=True, weight_decay=0.0005)
     optimizer = optim.SGD(model.parameters(), lr, momentum=0.9, weight_decay=5e-4)
 
     for i in range(args.resume, epoch):
-        print("epoch i")
         correct = 0
         total = 0
         total_loss = 0
@@ -50,7 +48,6 @@ def train(model, loader, device, lr, epoch, attacker, args, testloader, normaliz
         model.train()
 
         for batch_idx, (cln_data, target) in enumerate(loader):
-            print("batch", batch_idx)
             cln_data, target = cln_data.to(device), target.to(device)
             
             cur_lr = lr_schedule(i + (batch_idx + 1) / len(loader))
@@ -128,7 +125,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', default="cifar", type=str)
     parser.add_argument('--batch_size',default=128, type=int)
     parser.add_argument('--lr', default=0.1, type=float)
-    parser.add_argument('--epoch', default=53, type=int)
+    parser.add_argument('--epoch', default=30, type=int)
 
     parser.add_argument('--attack', default="l1wass", type=str)
     parser.add_argument('--eps', default=0.005, type=float)
@@ -153,12 +150,9 @@ if __name__ == "__main__":
     trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=2)
     testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=2)
 
-    print("after data")
-
     net = str2model(path=args.save_model_loc, dataset=args.dataset, pretrained=args.resume).eval().to(device)
     #net = torch.nn.DataParallel(model, device_ids=[0, 1, 2])
 
-    print("after model")
 
     if args.attack == "frank":
         attacker = FrankWolfe(predict=lambda x: net(normalize(x)),

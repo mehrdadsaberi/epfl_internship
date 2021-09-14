@@ -23,6 +23,8 @@ from models.utils_cifar import train, test, std, mean, get_hms, interpolate
 from models.conv_iResNet import conv_iResNet as iResNet
 from models.conv_iResNet import multiscale_conv_iResNet as multiscale_iResNet
 
+import setGPU
+
 parser = argparse.ArgumentParser(description='Train i-ResNet/ResNet on Cifar')
 parser.add_argument('-densityEstimation', '--densityEstimation', dest='densityEstimation',
                     action='store_true', help='perform density estimation')
@@ -220,8 +222,8 @@ def main():
 
 
     # setup logging with visdom
-    viz = visdom.Visdom(port=args.vis_port, server="http://" + args.vis_server)
-    assert viz.check_connection(), "Could not make visdom"
+    # viz = visdom.Visdom(port=args.vis_port, server="http://" + args.vis_server)
+    # assert viz.check_connection(), "Could not make visdom"
 
     if args.deterministic:
         trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch,
@@ -315,7 +317,7 @@ def main():
         else:
             model.set_num_terms(args.numSeriesTerms)
         model = torch.nn.DataParallel(model.module)
-        test(best_objective, args, model, start_epoch, testloader, viz, use_cuda, test_log)
+        test(best_objective, args, model, start_epoch, testloader, use_cuda, test_log)
         return
 
     print('|  Train Epochs: ' + str(args.epochs))
@@ -339,14 +341,14 @@ def main():
 
     for epoch in range(1, 1+args.epochs):
         start_time = time.time()
-        train(args, model, optimizer, epoch, trainloader, trainset, viz, use_cuda, train_log)
+        train(args, model, optimizer, epoch, trainloader, trainset, use_cuda, train_log)
         epoch_time = time.time() - start_time
         elapsed_time += epoch_time
         print('| Elapsed time : %d:%02d:%02d' % (get_hms(elapsed_time)))
 
     print('Testing model')
     test_log = open(os.path.join(args.save_dir, "test_log.txt"), 'w')
-    test_objective = test(test_objective, args, model, epoch, testloader, viz, use_cuda, test_log)
+    test_objective = test(test_objective, args, model, epoch, testloader, use_cuda, test_log)
     print('* Test results : objective = %.2f%%' % (test_objective))
     with open(os.path.join(args.save_dir, 'final.txt'), 'w') as f:
         f.write(str(test_objective))

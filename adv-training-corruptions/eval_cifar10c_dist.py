@@ -18,6 +18,9 @@ import matplotlib.pyplot as plt
 
 import ot.gromov
 
+from models.iRevNet import iRevNet
+
+
 
 def corr_eval(x_corrs, y_corrs, model):
     model.eval()
@@ -73,7 +76,7 @@ def main():
     std = torch.tensor([0.229, 0.224, 0.225], dtype=torch.float, device=device).unsqueeze(-1).unsqueeze(-1)
 
     model = ResNet18().cuda()
-    ckpt = torch.load("models/cifar_vanilla.pth")
+    ckpt = torch.load("nets/cifar_vanilla.pth")
     if "net" in ckpt.keys():
         for key in ckpt["net"].keys():
             assert "module" in key
@@ -88,6 +91,25 @@ def main():
 
     
     plt.rcParams["figure.figsize"] = (30,10)
+
+    
+    checkpoint = torch.load("nets/i-revnet-25-bij.t7")
+    lpips_model = checkpoint['model'].module
+
+    def revnet_dist(x1, x2):
+        x1_features = lpips_model.features(x1)[0]
+        x2_features = lpips_model.features(x2)[0]
+        
+        x1_features_norm = torch.sqrt(torch.sum(x1_features ** 2, dim=1, keepdim=True)) + 1e-10
+        x1_features = x1_features / (x1_features_norm * 
+                            np.sqrt(x1_features.size()[2] * x1_features.size()[3]))
+        
+        x2_features_norm = torch.sqrt(torch.sum(x2_features ** 2, dim=1, keepdim=True)) + 1e-10
+        x2_features = x2_features / (x2_features_norm * 
+                            np.sqrt(x2_features.size()[2] * x2_features.size()[3]))
+
+        return (x1_features - x2_features).norm(p=2, dim=(1,2,3))
+
 
     def pi_analyze(pi, dist, fname):
         try:
@@ -152,55 +174,56 @@ def main():
             # mean_l1 = 0
             # mean_diff = 0
 
-            # for data in dataloader:
-            #     cln_x = data["Clean Image"].cuda()
-            #     corr_x = data["Corrupted Image"].cuda()
-
-            #     dist = wass_func(cln_x, corr_x)
-
-            #     (N,C,X,Y) = cln_x.size()
-            #     x1 = (cln_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
-            #     x1 /= x1.sum(dim=1, keepdim=True) + 1e-35
-            #     x2 = (corr_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
-            #     x2 /= x2.sum(dim=1, keepdim=True) + 1e-35
-            #     dist_l1 = (x1 - x2).abs().sum(dim=1).view(N, C).sum(dim=1)
-                
-                
-            #     mean_dist += dist.sum()
-            #     mean_l1 += dist_l1.sum()
-            #     mean_diff += (dist - dist_l1).abs().sum()
-
-            mean_pi = np.zeros(1)
-
             for data in dataloader:
-                for c in range(3):
-                    cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
-                    cln_x /= np.sum(cln_x)
-                    corr_x = data["Corrupted Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
-                    corr_x /= np.sum(corr_x)
+                cln_x = data["Clean Image"].cuda()
+                corr_x = data["Corrupted Image"].cuda()
 
-                    M = torch.load("cmats/l2.pt").numpy()
+                dist = revnet_dist(cln_x, corr_x)
 
-                    #dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
-                    #dist = ot.emd2(cln_x, corr_x, M)
-                    pi = ot.emd(cln_x, corr_x, M)
-                    dist = np.sum(M * pi)
+                # (N,C,X,Y) = cln_x.size()
+                # x1 = (cln_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+                # x1 /= x1.sum(dim=1, keepdim=True) + 1e-35
+                # x2 = (corr_x * 0.5 + 0.5).view(N * C, X * Y).clamp(min=3e-4)
+                # x2 /= x2.sum(dim=1, keepdim=True) + 1e-35
+                # dist_l1 = (x1 - x2).abs().sum(dim=1).view(N, C).sum(dim=1)
+                
+                
+                mean_dist += dist.sum()
+                # mean_l1 += dist_l1.sum()
+                # mean_diff += (dist - dist_l1).abs().sum()
 
-                    if mean_pi.shape != pi.shape:
-                        mean_pi = pi
-                    else :
-                        mean_pi += pi
+            # mean_pi = np.zeros(1)
+
+            # for data in dataloader:
+            #     for c in range(3):
+            #         cln_x = data["Clean Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+            #         cln_x /= np.sum(cln_x)
+            #         corr_x = data["Corrupted Image"][0,c].view(-1).clamp(min=1e-5).numpy().astype(np.float64)
+            #         corr_x /= np.sum(corr_x)
+
+            #         M = torch.load("cmats/l2.pt").numpy()
+
+            #         #dist = ot.gromov.gromov_wasserstein2(M, M, cln_x, corr_x, loss_fun="square_loss")
+            #         #dist = ot.emd2(cln_x, corr_x, M)
+            #         pi = ot.emd(cln_x, corr_x, M)
+            #         dist = np.sum(M * pi)
+
+            #         if mean_pi.shape != pi.shape:
+            #             mean_pi = pi
+            #         else :
+            #             mean_pi += pi
                     
-                    #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
-                    #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
-                    #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
-                    #print(dist)
-                    #exit()
-                    mean_dist += dist
+            #         #print(np.sum(cln_x), np.sum(corr_x), dist, np.sum(np.abs(cln_x - corr_x)))
+            #         #dist = ((cln_x - corr_x) * (cln_x - corr_x)).sum(dim=(1,2,3))
+            #         #dist = (cln_x - corr_x).abs().amax(dim=(1,2,3))
+            #         #print(dist)
+            #         #exit()
+            #         mean_dist += dist
             
-            pi_analyze(mean_pi / (args.n_samples * 3), mean_dist / (args.n_samples * 3), "{}_{}".format(corr, i))
+            # pi_analyze(mean_pi / (args.n_samples * 3), mean_dist / (args.n_samples * 3), "{}_{}".format(corr, i))
 
-            print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / (args.n_samples * 3), acc_corr))
+            # print("{} {} | \t Mean Wasserstein: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / (args.n_samples * 3), acc_corr))
+            print("{} {} | \t Mean LPIPS: {:.4f} \t Model Accuracy: {:.4f}".format(corr.ljust(20), i, mean_dist / args.n_samples, acc_corr))
 
 
     # if args.only_clean:

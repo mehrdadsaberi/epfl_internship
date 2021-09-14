@@ -12,6 +12,7 @@ from advex_uar.common import pyt_common as uar_common
 from .models import CifarResNetFeatureModel, ImageNetResNetFeatureModel, \
     AlexNetFeatureModel, CifarAlexNet, VGG16FeatureModel, TradesWideResNet
 from . import datasets
+from .resnet import ResNet18
 
 
 class MarginLoss(nn.Module):
@@ -90,7 +91,23 @@ def get_dataset_model(
     if arch is None:
         arch = args.arch
 
-    if arch.startswith('rob-') or (
+    if arch == 'resnet18' and args.checkpoint == "nets/cifar_vanilla.pth":
+        model = ResNet18().cuda()
+        ckpt = torch.load(args.checkpoint)
+        if "net" in ckpt.keys():
+            for key in ckpt["net"].keys():
+                assert "module" in key
+            ckpt["net"] = dict((key[7:], value) for key, value in ckpt["net"].items())
+            model.load_state_dict(ckpt["net"])
+        model.eval()
+        return dataset, model
+    elif arch == 'resnet18':
+        model = ResNet18().cuda()
+        ckpt = torch.load(args.checkpoint)
+        model.load_state_dict(ckpt["model_state_dict"])
+        model.eval()
+        return dataset, model
+    elif arch.startswith('rob-') or (
         dataset_name.startswith('cifar') and
         'resnet' in arch
     ):
