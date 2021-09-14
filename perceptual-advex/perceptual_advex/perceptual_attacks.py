@@ -501,7 +501,7 @@ class NewtonsPerceptualProjection(nn.Module):
             bound, lpips_model)
 
     def forward(self, inputs, adv_inputs, input_features=None):
-        tt = time.time()
+        # tt = time.time()
         original_adv_inputs = adv_inputs
         if input_features is None:
             input_features = normalize_flatten_features(
@@ -513,11 +513,11 @@ class NewtonsPerceptualProjection(nn.Module):
         needs_projection.requires_grad = False
         iteration = 0
         
-        print(time.time() - tt)
+        # print(time.time() - tt)
 
         while needs_projection.sum() > 0 and iteration < self.max_iterations:
-            st_time = time.time()
-            print("iter start", time.time()- tt)
+            # st_time = time.time()
+            # print("iter start", time.time()- tt)
             adv_inputs.requires_grad = True
             adv_features = normalize_flatten_features(
                 self.lpips_model.features(adv_inputs[needs_projection]))
@@ -1172,11 +1172,11 @@ class L2StepAttack(nn.Module):
         self.random_start = random_start
         self.projection_type = projection
 
-        # if self.step is None:
-        #     if self.decay_step_size:
-        #         self.step = self.bound
-        #     else:
-        #         self.step = 2 * self.bound / self.num_iterations
+        if self.step is None:
+            if self.decay_step_size:
+                self.step = self.bound
+            else:
+                self.step = self.bound / 4
 
         self.lpips_model = get_lpips_model(lpips_model, model)
         # self.first_order_step = FirstOrderStepPerceptualAttack(
@@ -1186,8 +1186,8 @@ class L2StepAttack(nn.Module):
         #     targeted=self.random_targets)
         self.projection = PROJECTIONS[projection](self.bound, self.lpips_model)
         self.newton_projection = NewtonsPerceptualProjection(self.bound, self.lpips_model)
-        self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
-        # self.loss = torch.nn.CrossEntropyLoss()
+        # self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        self.loss = torch.nn.CrossEntropyLoss()
 
     def _attack(self, inputs, labels):
         with torch.no_grad():
@@ -1301,6 +1301,66 @@ class L2StepAttack(nn.Module):
 
     def perturb(self, inputs, labels):
         return self.forward(inputs, labels)
+
+
+
+class PGD_L2(nn.Module):
+    def __init__(self, model, bound=0.5, step=0.06, num_iterations=10, num_classes=None, random_targets=False):
+        
+        super().__init__()
+        
+        self.model = model
+        self.bound = bound
+        self.num_iterations = num_iterations
+        self.step = step
+        self.num_classes = num_classes
+        self.random_targets = random_targets
+
+        # self.loss = MarginLoss(kappa=kappa, targeted=self.random_targets)
+        self.loss = torch.nn.CrossEntropyLoss()
+
+    def _attack(self, inputs, labels):
+
+        start_perturbations = torch.zeros_like(inputs)
+        start_perturbations.normal_(0, 0.0001)
+
+        adv_inputs = inputs + start_perturbations
+        
+        for attack_iter in range(self.num_iterations):
+            adv_inputs.requires_grad = True
+            adv_logits = self.model(adv_inputs)
+
+            loss = self.loss(adv_logits, labels)
+            grad = torch.autograd.grad(loss, adv_inputs, create_graph=False)[0]
+            grad = grad.detach()
+            adv_inputs.requires_grad = False
+            
+            grad_norm = torch.norm(grad.view(grad.size(0),-1),dim=1).view(-1,1,1,1)
+            scaled_grad = grad/(grad_norm + 1e-10)
+            adv_inputs = (adv_inputs + scaled_grad * self.step).detach()
+            
+            adv_inputs = inputs + (adv_inputs - inputs).renorm(p=2,dim=0,maxnorm=self.bound)
+
+        # plot_images(inputs, adv_inputs, "L2")
+
+
+        return adv_inputs
+
+    def forward(self, inputs, labels):
+        if self.random_targets:
+            return utilities.run_attack_with_random_targets(
+                self._attack,
+                self.model,
+                inputs,
+                labels,
+                self.num_classes,
+            )
+        else:
+            return self._attack(inputs, labels)
+
+    def perturb(self, inputs, labels):
+        return self.forward(inputs, labels)
+
 
 
 def plot_images(inputs, adv_inputs, fname):

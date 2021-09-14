@@ -2,7 +2,6 @@ import os
 import argparse
 import numpy as np
 import torch
-import models
 import pandas as pd
 import data
 import setGPU
@@ -11,6 +10,7 @@ from robustbench.data import load_cifar10, load_cifar10c
 from robustbench.utils import clean_accuracy
 
 from resnet import ResNet18
+from models.c_models import PreActResNet18
 
 
 def corr_eval(x_corrs, y_corrs, model):
@@ -58,13 +58,10 @@ def main():
                  ["Wass 0.001", "nets/cifar_frank_eps-0.001_epoch-30.pth", "dict", None],
                 #  ["Wass 0.001 (60ep)", "models/cifar_frank_eps-0.001_epoch-60-c.pth", "dict", None],
                  ["Wass 0.001 (150ep)", "nets/cifar_frank_eps-0.001_epoch-150.pth", "dict", None],
-                 ["Revnet 0.001", "nets/cifar_revnet_eps-0.001_alpha-0.01_epoch-30.pth", "dict", None],
-                 ["Revnet 0.002", "nets/cifar_revnet_eps-0.002_alpha-0.01_epoch-30.pth", "dict", None],
+                 ["Revnet 0.00025", "nets/cifar_revnet_eps-0.00025_alpha-0.01_epoch-30.pth", "dict", None],
                  ["Revnet 0.004", "nets/cifar_revnet_eps-0.004_alpha-0.01_epoch-30.pth", "dict", None],
-                 ["Revnet 0.008", "nets/cifar_revnet_eps-0.008_alpha-0.01_epoch-30.pth", "dict", None],
                  ["Revnet 0.016", "nets/cifar_revnet_eps-0.016_alpha-0.01_epoch-30.pth", "dict", None],
-                 ["Revnet nclamp 0.004", "nets/noclamp_cifar_revnet_eps-0.004_alpha-0.01_epoch-30.pth", "dict", None],
-                #  ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
+                 #  ["Wass 0.00075", "models/cifar_frank_eps-0.00075_epoch-30.pth", "dict", None],
                 #  ["Wass 0.0005", "models/cifar_frank_eps-0.0005_epoch-30.pth", "dict", None],
                 #  ["Wass 0.0001", "models/cifar_frank_eps-0.0001_epoch-30.pth", "dict", None],
 #                ["Wass 0.0008 (a,51ep)", "models/cifar_l1wass_eps-0.0008_alpha-0.005_epoch-51.pth", "dict", None],
@@ -98,7 +95,7 @@ def main():
                 model[-1].load_state_dict(ckpt["net"])
             model[-1].eval()
         elif model[2] == "pre":        
-            model[-1] = models.PreActResNet18(n_cls=10, model_width=64, cifar_norm=True).cuda()
+            model[-1] = PreActResNet18(n_cls=10, model_width=64, cifar_norm=True).cuda()
             model[-1].load_state_dict(torch.load(model[1])['last'])
             model[-1].eval()
         prnt += [model[0]]

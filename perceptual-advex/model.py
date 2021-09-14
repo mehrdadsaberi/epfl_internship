@@ -55,6 +55,7 @@ def str2model(path, dataset=None, pretrained=True):
 def load_model(net, path):
     if not path.endswith(".pth") and not path.endswith(".pkl"):
         path = "./checkpoints/" + path + ".pth"
+        
 
         ckpt = torch.load(path)
 

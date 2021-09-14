@@ -40,6 +40,8 @@ if __name__ == '__main__':
     dataset, model = get_dataset_model(args)
     train_loader, val_loader = dataset.make_loaders(1, args.batch_size, only_val=False)
 
+    # attack = L2Attack(model, num_iterations=10, bound=0.5, step=0.06)
+
     
     mu = torch.tensor([0.4914, 0.4822, 0.4465], dtype=torch.float, device="cuda").unsqueeze(-1).unsqueeze(-1)
     std = torch.tensor([0.2023, 0.1994, 0.2010], dtype=torch.float, device="cuda").unsqueeze(-1).unsqueeze(-1)
